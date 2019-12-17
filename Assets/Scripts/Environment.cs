@@ -93,9 +93,12 @@ public class Environment : MonoBehaviour
                 tile.Position = new Vector3( position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
                 tile.IsAccessible = isAccessible;
                 tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
+                if (x == 0 && y == 0)
+                {
+                    tile.Position += new Vector3(0, 1, 1);
+                }
                 mMap[x][y] = tile;
                 mAll.Add(tile);
-
                 if(start)
                 {
                     Start = tile;
@@ -108,6 +111,8 @@ public class Environment : MonoBehaviour
             position.x += TileSize;
             position.z = -(halfHeight * TileSize);
         }
+
+        
     }
 
     private void SetupConnections()
