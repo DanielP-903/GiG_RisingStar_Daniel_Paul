@@ -95,7 +95,8 @@ public class Environment : MonoBehaviour
                 tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
                 if (x == 0 && y == 0)
                 {
-                    tile.Position += new Vector3(0, 1, 1);
+                    tile.Position += new Vector3(0, 2, 0);
+                    tile.gameObject.transform.position += new Vector3(0, 2, 0);
                 }
                 mMap[x][y] = tile;
                 mAll.Add(tile);

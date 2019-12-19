@@ -16,7 +16,7 @@ public class Game : MonoBehaviour
     private Environment mMap;
 
     private readonly int NumberOfRaycastHits = 1;
-
+    
     void Start()
     {
         mRaycastHits = new RaycastHit[NumberOfRaycastHits];
@@ -43,6 +43,9 @@ public class Game : MonoBehaviour
                 }
             }
         }
+
+        // Get character pos
+        //mCharacter.gameObject.transform.position;
     }
 
     public void ShowMenu(bool show)
