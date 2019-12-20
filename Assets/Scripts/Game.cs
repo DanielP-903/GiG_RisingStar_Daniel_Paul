@@ -7,12 +7,14 @@ public class Game : MonoBehaviour
 {
     [SerializeField] private Camera MainCamera;
     [SerializeField] private Character Character;
+    [SerializeField] private Character Enemy;
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
     [SerializeField] private Transform CharacterStart;
 
     private RaycastHit[] mRaycastHits;
     private Character mCharacter;
+    private Character mEnemy;
     private Environment mMap;
 
     private readonly int NumberOfRaycastHits = 1;
@@ -21,7 +23,9 @@ public class Game : MonoBehaviour
     {
         mRaycastHits = new RaycastHit[NumberOfRaycastHits];
         mMap = GetComponentInChildren<Environment>();
-        mCharacter = Instantiate(Character, transform); 
+        mCharacter = Instantiate(Character, transform);
+        mEnemy = Instantiate(Enemy, transform);
+        mEnemy.gameObject.transform.position += new Vector3(10,0,10);
         ShowMenu(true);
     }
 
@@ -44,8 +48,19 @@ public class Game : MonoBehaviour
             }
         }
 
+
+        mCharacter.getCurrentPosition();
+
+        //mCharacter.gameObject.
+        int hits2 = Physics.RaycastNonAlloc(screenClick, mRaycastHits);
+        EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
+        if (tile2 != null)
+        {
+            List<EnvironmentTile> route = mMap.Solve(mEnemy.CurrentPosition, tile);
+            mEnemy.GoTo(route);
+        }
         // Get character pos
-        //mCharacter.gameObject.transform.position;
+        //wmCharacter.gameObject.transform.position;
     }
 
     public void ShowMenu(bool show)
