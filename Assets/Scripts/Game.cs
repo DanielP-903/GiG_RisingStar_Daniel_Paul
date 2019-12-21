@@ -11,11 +11,14 @@ public class Game : MonoBehaviour
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
     [SerializeField] private Transform CharacterStart;
+    [SerializeField] private Transform EnemyStart;
 
     private RaycastHit[] mRaycastHits;
     private Character mCharacter;
     private Character mEnemy;
     private Environment mMap;
+    private Vector3 posLastFrame;
+    private bool isGameStarted = false;
 
     private readonly int NumberOfRaycastHits = 1;
     
@@ -25,7 +28,7 @@ public class Game : MonoBehaviour
         mMap = GetComponentInChildren<Environment>();
         mCharacter = Instantiate(Character, transform);
         mEnemy = Instantiate(Enemy, transform);
-        mEnemy.gameObject.transform.position += new Vector3(10,0,10);
+        //mEnemy.gameObject.transform.position += new Vector3(10,0,10);
         ShowMenu(true);
     }
 
@@ -42,25 +45,38 @@ public class Game : MonoBehaviour
                 EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
                 if (tile != null)
                 {
-                    List<EnvironmentTile> route = mMap.Solve(mCharacter.CurrentPosition, tile);
+                    List<EnvironmentTile> route = mMap.Solve(mCharacter.CurrentPosition, tile, "player");
                     mCharacter.GoTo(route);
                 }
             }
         }
 
-
-        mCharacter.getCurrentPosition();
-
-        //mCharacter.gameObject.
-        int hits2 = Physics.RaycastNonAlloc(screenClick, mRaycastHits);
-        EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
-        if (tile2 != null)
+        if (posLastFrame != mCharacter.transform.position)
         {
-            List<EnvironmentTile> route = mMap.Solve(mEnemy.CurrentPosition, tile);
-            mEnemy.GoTo(route);
+            EnvironmentTile tile2 = CheckAround(mCharacter.CurrentPosition);
+            if (tile2 != null)
+            {
+                List<EnvironmentTile> route2 = mMap.Solve(mEnemy.CurrentPosition, tile2, "enemy");
+                mEnemy.GoTo(route2);
+            }
         }
-        // Get character pos
-        //wmCharacter.gameObject.transform.position;
+
+        posLastFrame = mCharacter.transform.position;
+    }
+
+    public EnvironmentTile CheckAround(EnvironmentTile tile)
+    {
+        if (tile != null)
+        {
+            foreach (EnvironmentTile e in tile.Connections)
+            {
+                if (e.IsAccessible == true)
+                {
+                    return e;
+                }
+            }
+        }
+        return null;
     }
 
     public void ShowMenu(bool show)
@@ -74,13 +90,23 @@ public class Game : MonoBehaviour
             {
                 mCharacter.transform.position = CharacterStart.position;
                 mCharacter.transform.rotation = CharacterStart.rotation;
+                mEnemy.transform.position = EnemyStart.position;
+                mEnemy.transform.rotation = EnemyStart.rotation;
                 mMap.CleanUpWorld();
+
+                isGameStarted = false;
             }
             else
             {
                 mCharacter.transform.position = mMap.Start.Position;
                 mCharacter.transform.rotation = Quaternion.identity;
                 mCharacter.CurrentPosition = mMap.Start;
+
+                mEnemy.transform.position = mMap.Start.Position;
+                mEnemy.transform.rotation = Quaternion.identity;
+                mEnemy.CurrentPosition = mMap.Start;
+
+                isGameStarted = true;
             }
         }
     }

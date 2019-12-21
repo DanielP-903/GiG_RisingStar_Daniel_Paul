@@ -93,11 +93,6 @@ public class Environment : MonoBehaviour
                 tile.Position = new Vector3( position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
                 tile.IsAccessible = isAccessible;
                 tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
-                //if (x == 0 && y == 0)
-                //{
-                //    tile.Position += new Vector3(0, 2, 0);
-                //    tile.gameObject.transform.position += new Vector3(0, 2, 0);
-                //}
                 mMap[x][y] = tile;
                 mAll.Add(tile);
                 if(start)
@@ -189,7 +184,7 @@ public class Environment : MonoBehaviour
         }
     }
 
-    public List<EnvironmentTile> Solve(EnvironmentTile begin, EnvironmentTile destination)
+    public List<EnvironmentTile> Solve(EnvironmentTile begin, EnvironmentTile destination, string plrEnm)
     {
         List<EnvironmentTile> result = null;
         if (begin != null && destination != null)
@@ -277,7 +272,7 @@ public class Environment : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("Path Not Found");
+                    Debug.LogWarning("Path Not Found: " + plrEnm);
                 }
             }
             else
@@ -290,7 +285,7 @@ public class Environment : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("Cannot find path for invalid nodes");
+            Debug.LogWarning("Cannot find path for invalid nodes: " + plrEnm);
         }
 
         mLastSolution = result;
