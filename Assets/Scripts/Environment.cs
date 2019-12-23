@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Environment : MonoBehaviour
 {
@@ -17,6 +19,8 @@ public class Environment : MonoBehaviour
     private readonly Vector3 NodeSize = Vector3.one * 9.0f; 
     private const float TileSize = 10.0f;
     private const float TileHeight = 2.5f;
+
+    private float[] cornerValues;
 
     public EnvironmentTile Start { get; private set; }
 
@@ -86,7 +90,8 @@ public class Environment : MonoBehaviour
             mMap[x] = new EnvironmentTile[Size.y];
             for ( int y = 0; y < Size.y; ++y)
             {
-                bool isAccessible = start || Random.value < AccessiblePercentage;
+                //bool isAccessible = start || Random.value < AccessiblePercentage;
+                bool isAccessible = true;
                 List<EnvironmentTile> tiles = isAccessible ? AccessibleTiles : InaccessibleTiles;
                 EnvironmentTile prefab = tiles[Random.Range(0, tiles.Count)];
                 EnvironmentTile tile = Instantiate(prefab, position, Quaternion.identity, transform);
@@ -111,9 +116,14 @@ public class Environment : MonoBehaviour
         
     }
 
+    private void Populate_World()
+    {
+
+    }
+
     private void SetupConnections()
     {
-        // Currently we are only setting up connections between adjacnt nodes
+        // Currently we are only setting up connections between adjacent nodes
         for (int x = 0; x < Size.x; ++x)
         {
             for (int y = 0; y < Size.y; ++y)
@@ -291,5 +301,239 @@ public class Environment : MonoBehaviour
         mLastSolution = result;
 
         return result;
+    }
+
+    public float[,] Midpoint_Displacement(float minRange, float maxRange, int mapSize, int start)
+    {
+        float[,] map = new float[mapSize,mapSize];
+
+        // Get the size of terrain iterations required
+        int size = (int)Math.Abs(Math.Sqrt(mapSize - 1));
+
+        // Ensure that resolution is correct size (2^n + 1)
+        for (int i = 0; i < 12; i++)
+        {
+            // Check resolution
+            if (Math.Pow(2, i) == (mapSize - 1))
+            {
+                // Increase size based on resolution
+                size = i + 1;
+                break;
+            }
+        }
+
+        // Define container for average used in square step
+        float avg = 0;
+
+        // Define containers for square end point, initially terrain resolution
+        float WIDTH = mapSize - 1;
+        float HEIGHT = mapSize - 1;
+
+        // Define containers for square starting point x, y
+        float topHORIZONTAL = 0;
+        float topVERTICAL = 0;
+
+        // Initialise grid (default height)
+        for (int j = start; j < (mapSize); j++)
+        {
+            for (int i = start; i < (mapSize); i++)
+            {
+                map[j,i] = 1.0f;
+            }
+        }
+
+        // Seed corners initially
+        // Generate random heights for the four terrain corners
+        //map[0][0] = GenerateRandomHeight(10.0f);
+        //map[0][mapSize - 1] = GenerateRandomHeight(10.0f);
+        //map[mapSize - 1][0] = GenerateRandomHeight(10.0f);
+        //map[mapSize - 1][mapSize - 1] = GenerateRandomHeight(10.0f);
+
+        map[0,0] = Random.Range(minRange,maxRange);
+        map[0,mapSize - 1] = Random.Range(minRange, maxRange);
+        map[mapSize - 1,0] = Random.Range(minRange, maxRange);
+        map[mapSize - 1,mapSize - 1] = Random.Range(minRange, maxRange);
+
+        // Define width and height of terrain
+        WIDTH = mapSize - 1;
+        HEIGHT = mapSize - 1;
+
+        // Get number of squares within the terrain
+        int squares = (int)((mapSize - 1) / WIDTH);
+
+        // Define horizontal and vertical square containers
+        int squaresH = 1;
+        int squaresV = 1;
+
+        // Define iteration number
+        int itr = 0;
+        int val = 1;
+
+        // Define current width and height for current square
+        int CURRENT_WIDTH = 0;
+        int CURRENT_HEIGHT = 0;
+
+        // Do midpoint displacement until the number of squares reaches maximum
+        while (itr < size)
+        {
+            // Get no of squares at this iteration
+            squares = (int)Math.Pow(4, itr);
+
+            // Increment iteration no
+            itr++;
+
+            // Reset Start/End points for square
+            topHORIZONTAL = 0;
+            topVERTICAL = 0;
+            WIDTH = mapSize - 1;
+            HEIGHT = mapSize - 1;
+
+            // Get width and height of squares
+            WIDTH /= (float)Math.Sqrt(squares);
+            HEIGHT /= (float)Math.Sqrt(squares);}
+
+        // Get no of squares horizontally and vertically
+        squaresH = (int)Math.Sqrt(squares);
+        squaresV = (int)Math.Sqrt(squares);
+
+        // Reset current width and height of square
+        CURRENT_WIDTH = 0;
+        CURRENT_HEIGHT = 0;
+
+        // Loop through all horizontal squares
+        for (int i = 0; i < squaresH; i++)
+        {
+            // Add the current width
+            CURRENT_WIDTH += (int)WIDTH;
+
+            // Reset current height and vertical start pos
+            CURRENT_HEIGHT = 0;
+            topVERTICAL = 0;
+
+            // Check if width or horizontal start pos has gone beyond terrain limits
+            if (CURRENT_WIDTH > (mapSize) || topHORIZONTAL > (mapSize))
+            {
+                break;
+            }
+
+            // Loop through all vertical squares
+            for (int j = 0; j < squaresV; j++)
+            {
+                // Add the current height
+                CURRENT_HEIGHT += (int)HEIGHT;
+
+                // Check if height or vertical start pos has gone beyond terrain limits
+                if (CURRENT_HEIGHT > (mapSize) || topVERTICAL > (mapSize))
+                {
+                    break;
+                }
+
+                // Do square step to find corners and centre of this square at the start x,y and end x,y
+                SquareStep(map, (int)topHORIZONTAL, (int)topVERTICAL, CURRENT_WIDTH, CURRENT_HEIGHT);
+
+                // Do diamond step to find sides of this square at the start x,y and end x,y
+                diamond_step(map, (int)topHORIZONTAL, (int)topVERTICAL, CURRENT_WIDTH, CURRENT_HEIGHT, minRange, maxRange);
+
+                // Add the height to the vertical start pos
+                topVERTICAL += HEIGHT;
+            }
+
+            // Add the width to the horizontal start pos
+            topHORIZONTAL += WIDTH;
+        }
+
+        // Half max and min range 
+        minRange /= 2.0f;
+        maxRange /= 2.0f;
+
+        return map;
+    }
+
+    public void diamond_step(float[,] map, int startX, int startY, int chX, int chY, float minRange, float maxRange)
+    {
+        // Midpoint container
+        Vector2 mid;
+
+        // Find midpoint between top left point and bottom left point
+        mid = FindMidpoint(startX, startY, startX, chY);
+
+        // Calculate height of midpoint by getting the averages of the corner values
+        map[(int)mid.x,(int)mid.y] = CalcAverage(cornerValues[0], cornerValues[1], minRange, maxRange);
+
+
+        // Find midpoint between top left point and top right point
+        mid = FindMidpoint(startX, startY, chX, startY);
+
+        // Calculate height of midpoint by getting the averages of the corner values
+        map[(int)mid.x, (int)mid.y] = CalcAverage(cornerValues[0], cornerValues[2], minRange, maxRange);
+
+
+        // Find midpoint between bottom left point and bottom right point
+        mid = FindMidpoint(startX, chY, chX, chY);
+
+        // Calculate height of midpoint by getting the averages of the corner values
+        map[(int)mid.x, (int)mid.y] = CalcAverage(cornerValues[1], cornerValues[3], minRange, maxRange);
+
+
+        // Find midpoint between top right point and bottom right point
+        mid = FindMidpoint(chX, startY, chX, chY);
+
+        // Calculate height of midpoint by getting the averages of the corner values
+        map[(int)mid.x, (int)mid.y] = CalcAverage(cornerValues[2], cornerValues[3], minRange, maxRange);
+
+    }
+
+    // Square step to work out the corner heights and centre of each square
+    // Subsidiary of the midpoint displacement algorithm
+    public float[,] SquareStep(float[,] map, int startX, int startY, int resX, int resY)
+    {
+        // Define average height container
+        float avg = 0.0f;
+
+        // Define midpoint container
+        Vector2 mid;
+
+        // Get corner values of the square
+        cornerValues[0] = map[startX, startY];
+        cornerValues[1] = map[startX, resY];
+        cornerValues[2] = map[resX, startY];
+        cornerValues[3] = map[resX, resY];
+
+        // Find the midpoint from the diagonal of top left to bottom right
+        // This is the centre point
+        mid = FindMidpoint(startX, startY, resX, resY);
+
+        // Calculate the average height of the 4 corners
+        avg = cornerValues[0] + cornerValues[1] + cornerValues[2] + cornerValues[3];
+        avg /= 4;
+
+        // Set the centre point to the average height
+        map[(int)mid.x,(int)mid.y] = avg;
+
+        return map;
+    }
+
+    // Calculate average helper function creates random value and adds to average of two points
+    public float CalcAverage(float a, float b, float minRange, float maxRange)
+    {
+        // Calculate random value based on max and min terrain height range
+        float random = (float)Random.Range(minRange, maxRange); ;
+
+        // Return the average of the two floats combined with the calculated random value
+        return ((a + b) / 2) + random;
+    }
+
+    public Vector2 FindMidpoint(float x1, float y1, float x2, float y2)
+    {
+        // Declare midpoint container
+        Vector2 mid;
+
+        // Get midpoint between x values
+        mid.x = (x1 + x2) / 2;
+
+        // Get midpoint between y values
+        mid.y = (y1 + y2) / 2;
+
+        return mid;
     }
 }
