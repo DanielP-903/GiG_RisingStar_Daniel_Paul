@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
+using Color = UnityEngine.Color;
 using Random = UnityEngine.Random;
 
 public class Environment : MonoBehaviour
 {
-    [SerializeField] private List<EnvironmentTile> AccessibleTiles;
-    [SerializeField] private List<EnvironmentTile> InaccessibleTiles;
-    [SerializeField] private Vector2Int Size;
+    [SerializeField] public List<EnvironmentTile> AccessibleTiles;
+    [SerializeField] public List<EnvironmentTile> InaccessibleTiles;
+    [SerializeField] public Vector2Int Size;
     [SerializeField] private float AccessiblePercentage;
 
-    private EnvironmentTile[][] mMap;
+    public EnvironmentTile[][] mMap;
     private List<EnvironmentTile> mAll;
     private List<EnvironmentTile> mToBeTested;
     private List<EnvironmentTile> mLastSolution;
@@ -23,6 +25,7 @@ public class Environment : MonoBehaviour
     private float[] cornerValues;
 
     public EnvironmentTile Start { get; private set; }
+
 
     private void Awake()
     {
@@ -88,38 +91,88 @@ public class Environment : MonoBehaviour
         for ( int x = 0; x < Size.x; ++x)
         {
             mMap[x] = new EnvironmentTile[Size.y];
-            for ( int y = 0; y < Size.y; ++y)
+            for (int y = 0; y < Size.y; ++y)
             {
-                //bool isAccessible = start || Random.value < AccessiblePercentage;
-                bool isAccessible = true;
-                List<EnvironmentTile> tiles = isAccessible ? AccessibleTiles : InaccessibleTiles;
-                EnvironmentTile prefab = tiles[Random.Range(0, tiles.Count)];
-                EnvironmentTile tile = Instantiate(prefab, position, Quaternion.identity, transform);
-                tile.Position = new Vector3( position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
-                tile.IsAccessible = isAccessible;
-                tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
-                mMap[x][y] = tile;
-                mAll.Add(tile);
-                if(start)
-                {
-                    Start = tile;
-                }
-
+                //if (x == 4 && y == 5)
+                //{
+                //    bool isAccessible = false;
+                //    List<EnvironmentTile> tiles = InaccessibleTiles;
+                //    EnvironmentTile prefab = tiles[Random.Range(0, tiles.Count)];
+                //    EnvironmentTile tile = Instantiate(prefab, position, Quaternion.identity, transform);
+                //    tile.Position = new Vector3(position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
+                //    tile.IsAccessible = isAccessible;
+                //    tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
+                //    mMap[x][y] = tile;
+                //    mAll.Add(tile);
+                //    if (start)
+                //    {
+                //        Start = tile;
+                //    }
+                //}
+                //else
+                //{
+                    bool isAccessible = true;
+                    List<EnvironmentTile> tiles = isAccessible ? AccessibleTiles : InaccessibleTiles;
+                    EnvironmentTile prefab;
+                    if (isAccessible == false)
+                    {
+                         prefab = tiles[Random.Range(0, tiles.Count)];
+                    }
+                    else
+                    {
+                         prefab = tiles[0];
+                    }
+                    EnvironmentTile tile = Instantiate(prefab, position, Quaternion.identity, transform);
+                    tile.Position = new Vector3(position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
+                    tile.IsAccessible = isAccessible;
+                    tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
+                    mMap[x][y] = tile;
+                    mAll.Add(tile);
+                    if (start)
+                    {
+                        Start = tile;
+                    }
+                //}
                 position.z += TileSize;
                 start = false;
             }
-
             position.x += TileSize;
             position.z = -(halfHeight * TileSize);
         }
 
-        
+        int i = 4, j = 5;
+        position.x = mMap[i][j].transform.position.x;
+        position.y = mMap[i][j].transform.position.y;
+        position.z = mMap[i][j].transform.position.z;
+        //position.x = i;
+        //position.y = j;
+        List<EnvironmentTile> tilesNA = InaccessibleTiles;
+        EnvironmentTile prefabNA = tilesNA[Random.Range(0, tilesNA.Count)];
+        EnvironmentTile tileNA = Instantiate(prefabNA, position, Quaternion.identity, transform);
+        //tileNA.Position = position;
+        tileNA.Position = new Vector3(position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
+        tileNA.IsAccessible = false;
+        tileNA.gameObject.name = string.Format("Tile({0},{1})", i, j);
+        mMap[i][j] = tileNA;
+
+        if (mAll.FindIndex(ind => ind.Equals(mMap[i][j])) != -1)
+        {
+            mAll[mAll.FindIndex(ind => ind.Equals(mMap[i][j]))] = tileNA;
+        }
+
+        //foreach (var item in mAll)
+        //{
+        //    if (item.gameObject.name == "Tile(4,5)")
+        //    {
+        //        mAll[(4*mAll.Count) + 5] = prefabNA;
+        //    }
+        //}
+        //mAll.RemoveAt((4*mAll.Count ) + 5);
+        //mAll.Add(tileNA);
+
+
     }
 
-    private void Populate_World()
-    {
-
-    }
 
     private void SetupConnections()
     {

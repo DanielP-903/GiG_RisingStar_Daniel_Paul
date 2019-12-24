@@ -18,7 +18,10 @@ public class Game : MonoBehaviour
     private Character mEnemy;
     private Environment mMap;
     private Vector3 posLastFrame;
-    private bool isGameStarted = false;
+
+    public Material texMaterial;
+
+    public bool isGameStarted;
 
     private readonly int NumberOfRaycastHits = 1;
     
@@ -27,20 +30,38 @@ public class Game : MonoBehaviour
         mRaycastHits = new RaycastHit[NumberOfRaycastHits];
         mMap = GetComponentInChildren<Environment>();
         mCharacter = Instantiate(Character, transform);
+        mCharacter.tag = "Player";
         mEnemy = Instantiate(Enemy, transform);
         //mEnemy.gameObject.transform.position += new Vector3(10,0,10);
         ShowMenu(true);
+    }
+
+
+    private Vector2Int findIndex(EnvironmentTile tile)
+    {
+        for (int i = 0; i < mMap.Size.x; i++)
+        {
+            for (int j = 0; j < mMap.Size.y; j++)
+            {
+                if (mMap.mMap[i][j] == tile)
+                {
+                    return new Vector2Int(i, j);
+                }
+            }
+        }
+
+        return new Vector2Int(-1, -1);
     }
 
     private void Update()
     {
         // Check to see if the player has clicked a tile and if they have, try to find a path to that 
         // tile. If we find a path then the character will move along it to the clicked tile. 
-        if(Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0))
         {
             Ray screenClick = MainCamera.ScreenPointToRay(Input.mousePosition);
             int hits = Physics.RaycastNonAlloc(screenClick, mRaycastHits);
-            if( hits > 0)
+            if (hits > 0)
             {
                 EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
                 if (tile != null)
@@ -49,6 +70,17 @@ public class Game : MonoBehaviour
                     mCharacter.GoTo(route);
                 }
             }
+        }
+
+        Ray screenLook = MainCamera.ScreenPointToRay(Input.mousePosition);
+        int hits2 = Physics.RaycastNonAlloc(screenLook, mRaycastHits);
+        if (hits2 > 0)
+        {
+            EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
+            //tile.GetComponent<MeshRenderer>().material = texMaterial;
+            Vector2Int index = findIndex(tile);
+            mMap.mMap[index.x][index.y] = mMap.AccessibleTiles[1];
+            //tile = mMap.AccessibleTiles[1];
         }
 
         if (posLastFrame != mCharacter.transform.position)
