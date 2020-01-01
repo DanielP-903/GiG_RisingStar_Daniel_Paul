@@ -105,6 +105,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: rock_large3
       objectReference: {fileID: 0}
+    - target: {fileID: -927199367670048503, guid: 6dfcc4f7ae5026f4d97500c0462b54b5,
+        type: 3}
+      propertyPath: m_Layer
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 6dfcc4f7ae5026f4d97500c0462b54b5,
         type: 3}
       propertyPath: m_LocalPosition.x

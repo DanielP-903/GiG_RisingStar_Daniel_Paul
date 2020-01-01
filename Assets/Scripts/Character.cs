@@ -8,6 +8,13 @@ public class Character : MonoBehaviour
 
     public EnvironmentTile CurrentPosition { get; set; }
 
+    public EnvironmentTile CurrentTarget { get; set; }
+
+    public float Health { get; set; }
+
+    private const float TileSize = 10.0f;
+    private const float TileHeight = 2.5f;
+
     private IEnumerator DoMove(Vector3 position, Vector3 destination)
     {
         // Move between the two specified positions over the specified amount of time
@@ -26,6 +33,62 @@ public class Character : MonoBehaviour
                 yield return null;
             }
         }
+    }
+
+    public void Forage(ref Environment mMap, ref List<EnvironmentTile> mAll)
+    {
+        if (CurrentTarget != null)
+        {
+            Debug.Log("Foraging...");
+            float otherHealth = CurrentTarget.Health;
+
+            Vector2Int pos = FindIndex(CurrentTarget, mMap);
+
+            Vector3 finalPosition;
+
+            finalPosition.x = mMap.mMap[pos.x][pos.y].transform.position.x;
+            finalPosition.y = mMap.mMap[pos.x][pos.y].transform.position.y;
+            finalPosition.z = mMap.mMap[pos.x][pos.y].transform.position.z;
+
+            Destroy(mMap.mMap[pos.x][pos.y].gameObject);
+
+            CurrentTarget.IsAccessible = true;
+
+            EnvironmentTile prefabA = mMap.AccessibleTiles[0];
+            EnvironmentTile tileA = Instantiate(prefabA, finalPosition, Quaternion.identity, transform);
+            
+            tileA.Position = new Vector3(finalPosition.x + (TileSize / 2), TileHeight, finalPosition.z + (TileSize / 2));
+            tileA.IsAccessible = false;
+            tileA.gameObject.name = string.Format("Tile({0},{1})", pos.x, pos.y);
+            tileA.Type = string.Format("ground");
+            
+            mMap.mMap[pos.x][pos.y] = tileA;
+            
+            Environment temp = mMap;
+
+            if (mAll.FindIndex(ind => ind.Equals(temp.mMap[pos.x][pos.y])) != -1)
+            {
+                mAll[mAll.FindIndex(ind => ind.Equals(temp.mMap[pos.x][pos.y]))] = tileA;
+            }
+        }
+    }
+
+    public Vector2Int FindIndex(EnvironmentTile tile, Environment mMap)
+    {
+        Vector2Int rVal = new Vector2Int(-1, -1);
+
+        for (int i = 0; i < mMap.Size.x; i++)
+        {
+            for (int j = 0; j < mMap.Size.y; j++)
+            {
+                if (mMap.mMap[i][j] == tile)
+                {
+                    rVal = new Vector2Int(i, j);
+                }
+            }
+        }
+
+        return rVal;
     }
 
     private IEnumerator DoGoTo(List<EnvironmentTile> route)

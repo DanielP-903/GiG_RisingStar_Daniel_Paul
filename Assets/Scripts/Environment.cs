@@ -14,7 +14,7 @@ public class Environment : MonoBehaviour
     [SerializeField] private float AccessiblePercentage;
 
     public EnvironmentTile[][] mMap;
-    private List<EnvironmentTile> mAll;
+    public List<EnvironmentTile> mAll;
     private List<EnvironmentTile> mToBeTested;
     private List<EnvironmentTile> mLastSolution;
 
@@ -22,10 +22,10 @@ public class Environment : MonoBehaviour
     private const float TileSize = 10.0f;
     private const float TileHeight = 2.5f;
 
-    private float[] cornerValues;
+    private float[] cornerValues = new float[4]{0,0,0,0};
 
     public EnvironmentTile Start { get; private set; }
-
+    public Vector3 finalPosition;
 
     private void Awake()
     {
@@ -93,46 +93,17 @@ public class Environment : MonoBehaviour
             mMap[x] = new EnvironmentTile[Size.y];
             for (int y = 0; y < Size.y; ++y)
             {
-                //if (x == 4 && y == 5)
-                //{
-                //    bool isAccessible = false;
-                //    List<EnvironmentTile> tiles = InaccessibleTiles;
-                //    EnvironmentTile prefab = tiles[Random.Range(0, tiles.Count)];
-                //    EnvironmentTile tile = Instantiate(prefab, position, Quaternion.identity, transform);
-                //    tile.Position = new Vector3(position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
-                //    tile.IsAccessible = isAccessible;
-                //    tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
-                //    mMap[x][y] = tile;
-                //    mAll.Add(tile);
-                //    if (start)
-                //    {
-                //        Start = tile;
-                //    }
-                //}
-                //else
-                //{
-                    bool isAccessible = true;
-                    List<EnvironmentTile> tiles = isAccessible ? AccessibleTiles : InaccessibleTiles;
-                    EnvironmentTile prefab;
-                    if (isAccessible == false)
-                    {
-                         prefab = tiles[Random.Range(0, tiles.Count)];
-                    }
-                    else
-                    {
-                         prefab = tiles[0];
-                    }
-                    EnvironmentTile tile = Instantiate(prefab, position, Quaternion.identity, transform);
-                    tile.Position = new Vector3(position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
-                    tile.IsAccessible = isAccessible;
-                    tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
-                    mMap[x][y] = tile;
-                    mAll.Add(tile);
-                    if (start)
-                    {
-                        Start = tile;
-                    }
-                //}
+                bool isAccessible = true;
+                List<EnvironmentTile> tiles = isAccessible ? AccessibleTiles : InaccessibleTiles;
+                EnvironmentTile prefab = tiles[0];
+                EnvironmentTile tile = Instantiate(prefab, position, Quaternion.identity, transform);
+                tile.Position = new Vector3(position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
+                tile.IsAccessible = isAccessible;
+                tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
+                tile.Type = string.Format("ground");
+                mMap[x][y] = tile;
+                mAll.Add(tile);
+                if (start) { Start = tile; }
                 position.z += TileSize;
                 start = false;
             }
@@ -140,39 +111,108 @@ public class Environment : MonoBehaviour
             position.z = -(halfHeight * TileSize);
         }
 
-        int i = 4, j = 5;
-        position.x = mMap[i][j].transform.position.x;
-        position.y = mMap[i][j].transform.position.y;
-        position.z = mMap[i][j].transform.position.z;
-        //position.x = i;
-        //position.y = j;
-        List<EnvironmentTile> tilesNA = InaccessibleTiles;
-        EnvironmentTile prefabNA = tilesNA[Random.Range(0, tilesNA.Count)];
-        EnvironmentTile tileNA = Instantiate(prefabNA, position, Quaternion.identity, transform);
-        //tileNA.Position = position;
-        tileNA.Position = new Vector3(position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
-        tileNA.IsAccessible = false;
-        tileNA.gameObject.name = string.Format("Tile({0},{1})", i, j);
-        mMap[i][j] = tileNA;
+        float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
 
-        if (mAll.FindIndex(ind => ind.Equals(mMap[i][j])) != -1)
+        for (int i = 0; i < Size.x; i++)
         {
-            mAll[mAll.FindIndex(ind => ind.Equals(mMap[i][j]))] = tileNA;
+            for (int j = 0; j < Size.y; j++)
+            {
+                if (result[i, j] < 20 && i != 0 && j != 0)
+                {
+                    MakeTileInaccessible(i,j, 0);
+                }
+            }
         }
 
-        //foreach (var item in mAll)
-        //{
-        //    if (item.gameObject.name == "Tile(4,5)")
-        //    {
-        //        mAll[(4*mAll.Count) + 5] = prefabNA;
-        //    }
-        //}
-        //mAll.RemoveAt((4*mAll.Count ) + 5);
-        //mAll.Add(tileNA);
+        int randomNumber = Random.Range(0, 100); // Get random number
 
+        if (randomNumber < 50) {
+            //RiverMaker(true);
+        }
+        else {
+            //RiverMaker(false);
+        }
 
+        //RiverMaker(true);
+
+        finalPosition = position;
     }
 
+    public void RiverMaker(bool direction)
+    {
+        float riverStartTile;
+
+        if (direction == true) // pos
+        {
+            riverStartTile = Random.Range(2, Size.x - 1);
+            for (int i = 0; i < Size.x; i++)
+            {
+                MakeTileInaccessible(i, (int)riverStartTile, 4);
+            }
+        }
+        else
+        {
+            riverStartTile = Random.Range(2, Size.y - 1);
+            for (int i = 0; i < Size.x; i++)
+            {
+                MakeTileInaccessible((int)riverStartTile, i, 4);
+            }
+        }
+    }
+
+    // Type:
+    // 0 = rocks
+    // 1 = stone
+    // 2 = trees
+    // 3 = logs
+    // 4 = water
+    public void MakeTileInaccessible(int x, int y, int type) 
+    {
+        finalPosition = mMap[x][y].transform.position;
+
+        EnvironmentTile prefabNA = InaccessibleTiles[0];
+
+        switch (type)
+        {
+            case 0: prefabNA = InaccessibleTiles[Random.Range(4, 10)]; break;
+            case 1: prefabNA = InaccessibleTiles[Random.Range(10, 16)]; break;
+            case 2: prefabNA = InaccessibleTiles[Random.Range(2, 4)]; break;
+            case 3: prefabNA = InaccessibleTiles[Random.Range(0, 2)]; break;
+            case 4: prefabNA = InaccessibleTiles[16]; break;
+        }
+
+        //mMap[x][y].GetComponent<MeshRenderer>(). = prefabNA.GetComponent<MeshRenderer>();
+        //EnvironmentTile tileNA = Instantiate(prefabNA, finalPosition, Quaternion.identity, transform);
+        //t.Position = new Vector3(finalPosition.x + (TileSize / 2), TileHeight, finalPosition.z + (TileSize / 2));
+        //t.gameObject.name = string.Format("Tile({0},{1})", x, y);
+        //tile.GetComponent<MeshRenderer>().materials = mMap.AccessibleTiles[1].GetComponent<MeshRenderer>().sharedMaterials;
+
+        var t = mMap[x][y];
+
+        t.GetComponent<MeshFilter>().sharedMesh = prefabNA.GetComponent<MeshFilter>().sharedMesh;
+        t.GetComponent<MeshRenderer>().materials = prefabNA.GetComponent<MeshRenderer>().sharedMaterials;
+        if (type == 0) {
+            Instantiate(prefabNA.GetComponentInChildren<MeshFilter>(), finalPosition, mMap[x][y].transform.rotation);
+        }
+        t.IsAccessible = false;
+
+        switch (type)
+        {
+            case 0: t.Type = "rock"; break;
+            case 1: t.Type = "stone"; break;
+            case 2: t.Type = "tree"; break;
+            case 3: t.Type = "logs"; break;
+            case 4: t.Type = "water"; break;
+            default: t.Type = "error"; break;
+        }
+
+        if (mAll.FindIndex(ind => ind.Equals(mMap[x][y])) != -1)
+        {
+            mAll[mAll.FindIndex(ind => ind.Equals(mMap[x][y]))] = t;
+        }
+
+        mMap[x][y] = t;
+    }
 
     private void SetupConnections()
     {
@@ -396,12 +436,6 @@ public class Environment : MonoBehaviour
         }
 
         // Seed corners initially
-        // Generate random heights for the four terrain corners
-        //map[0][0] = GenerateRandomHeight(10.0f);
-        //map[0][mapSize - 1] = GenerateRandomHeight(10.0f);
-        //map[mapSize - 1][0] = GenerateRandomHeight(10.0f);
-        //map[mapSize - 1][mapSize - 1] = GenerateRandomHeight(10.0f);
-
         map[0,0] = Random.Range(minRange,maxRange);
         map[0,mapSize - 1] = Random.Range(minRange, maxRange);
         map[mapSize - 1,0] = Random.Range(minRange, maxRange);
@@ -430,7 +464,7 @@ public class Environment : MonoBehaviour
         while (itr < size)
         {
             // Get no of squares at this iteration
-            squares = (int)Math.Pow(4, itr);
+            squares = (int) Math.Pow(4, itr);
 
             // Increment iteration no
             itr++;
@@ -442,62 +476,63 @@ public class Environment : MonoBehaviour
             HEIGHT = mapSize - 1;
 
             // Get width and height of squares
-            WIDTH /= (float)Math.Sqrt(squares);
-            HEIGHT /= (float)Math.Sqrt(squares);}
+            WIDTH /= (float) Math.Sqrt(squares);
+            HEIGHT /= (float) Math.Sqrt(squares);
 
-        // Get no of squares horizontally and vertically
-        squaresH = (int)Math.Sqrt(squares);
-        squaresV = (int)Math.Sqrt(squares);
+            // Get no of squares horizontally and vertically
+            squaresH = (int) Math.Sqrt(squares);
+            squaresV = (int) Math.Sqrt(squares);
 
-        // Reset current width and height of square
-        CURRENT_WIDTH = 0;
-        CURRENT_HEIGHT = 0;
-
-        // Loop through all horizontal squares
-        for (int i = 0; i < squaresH; i++)
-        {
-            // Add the current width
-            CURRENT_WIDTH += (int)WIDTH;
-
-            // Reset current height and vertical start pos
+            // Reset current width and height of square
+            CURRENT_WIDTH = 0;
             CURRENT_HEIGHT = 0;
-            topVERTICAL = 0;
 
-            // Check if width or horizontal start pos has gone beyond terrain limits
-            if (CURRENT_WIDTH > (mapSize) || topHORIZONTAL > (mapSize))
+            // Loop through all horizontal squares
+            for (int i = 0; i < squaresH; i++)
             {
-                break;
-            }
+                // Add the current width
+                CURRENT_WIDTH += (int) WIDTH;
 
-            // Loop through all vertical squares
-            for (int j = 0; j < squaresV; j++)
-            {
-                // Add the current height
-                CURRENT_HEIGHT += (int)HEIGHT;
+                // Reset current height and vertical start pos
+                CURRENT_HEIGHT = 0;
+                topVERTICAL = 0;
 
-                // Check if height or vertical start pos has gone beyond terrain limits
-                if (CURRENT_HEIGHT > (mapSize) || topVERTICAL > (mapSize))
+                // Check if width or horizontal start pos has gone beyond terrain limits
+                if (CURRENT_WIDTH > (mapSize) || topHORIZONTAL > (mapSize))
                 {
                     break;
                 }
 
-                // Do square step to find corners and centre of this square at the start x,y and end x,y
-                SquareStep(map, (int)topHORIZONTAL, (int)topVERTICAL, CURRENT_WIDTH, CURRENT_HEIGHT);
+                // Loop through all vertical squares
+                for (int j = 0; j < squaresV; j++)
+                {
+                    // Add the current height
+                    CURRENT_HEIGHT += (int) HEIGHT;
 
-                // Do diamond step to find sides of this square at the start x,y and end x,y
-                diamond_step(map, (int)topHORIZONTAL, (int)topVERTICAL, CURRENT_WIDTH, CURRENT_HEIGHT, minRange, maxRange);
+                    // Check if height or vertical start pos has gone beyond terrain limits
+                    if (CURRENT_HEIGHT > (mapSize) || topVERTICAL > (mapSize))
+                    {
+                        break;
+                    }
 
-                // Add the height to the vertical start pos
-                topVERTICAL += HEIGHT;
+                    // Do square step to find corners and centre of this square at the start x,y and end x,y
+                    SquareStep(map, (int) topHORIZONTAL, (int) topVERTICAL, CURRENT_WIDTH, CURRENT_HEIGHT);
+
+                    // Do diamond step to find sides of this square at the start x,y and end x,y
+                    diamond_step(map, (int) topHORIZONTAL, (int) topVERTICAL, CURRENT_WIDTH, CURRENT_HEIGHT, minRange, maxRange);
+
+                    // Add the height to the vertical start pos
+                    topVERTICAL += HEIGHT;
+                }
+
+                // Add the width to the horizontal start pos
+                topHORIZONTAL += WIDTH;
             }
 
-            // Add the width to the horizontal start pos
-            topHORIZONTAL += WIDTH;
+            // Half max and min range 
+            minRange /= 2.0f;
+            maxRange /= 2.0f;
         }
-
-        // Half max and min range 
-        minRange /= 2.0f;
-        maxRange /= 2.0f;
 
         return map;
     }

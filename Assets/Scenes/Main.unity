@@ -677,7 +677,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_BoundingSphereOverride: {x: -Infinity, y: 1.0587911e-22, z: 0, w: 1.8e-43}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
@@ -771,6 +771,7 @@ GameObject:
   m_Component:
   - component: {fileID: 896303072}
   - component: {fileID: 896303071}
+  - component: {fileID: 896303073}
   m_Layer: 0
   m_Name: Game
   m_TagString: GameController
@@ -791,13 +792,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MainCamera: {fileID: 963194227}
-  Character: {fileID: 792252150293316475, guid: 0ec771fc79c748e4694b82068b3883e1,
-    type: 3}
-  Enemy: {fileID: 792252150293316475, guid: 330065b5db45dc84487608cacab58e84, type: 3}
+  Character:
+  - {fileID: 792252150293316475, guid: 0ec771fc79c748e4694b82068b3883e1, type: 3}
+  - {fileID: 792252150293316475, guid: 330065b5db45dc84487608cacab58e84, type: 3}
   Menu: {fileID: 2099476870}
   Hud: {fileID: 1579498796}
   CharacterStart: {fileID: 561634765}
   EnemyStart: {fileID: 366655429}
+  characterSelection: 0
   texMaterial: {fileID: 2100000, guid: c4e472abef2548a4abdf9bbf325d0a3e, type: 2}
   isGameStarted: 0
 --- !u!4 &896303072
@@ -819,6 +821,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &896303073
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 896303070}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3e05f1af94bef241a1e51f1b9f954d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -1346,8 +1360,11 @@ MonoBehaviour:
   - {fileID: 10103160160458647, guid: aa373cc3cd8cfa7418126bd0b9a47880, type: 3}
   - {fileID: 8392035395846825301, guid: 4c0f70225ccee9c4eb8b566b0124f754, type: 3}
   - {fileID: 428312736237616533, guid: b2937a6c300c0624a8fb7c65bf8b21b3, type: 3}
-  Size: {x: 20, y: 15}
+  - {fileID: 571534609703175618, guid: a22f36318d1747049bdbb990d8619721, type: 3}
+  Size: {x: 17, y: 17}
   AccessiblePercentage: 0.85
+  mAll: []
+  finalPosition: {x: 0, y: 0, z: 0}
 --- !u!4 &2083344931
 Transform:
   m_ObjectHideFlags: 0
