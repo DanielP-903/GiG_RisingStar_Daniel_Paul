@@ -68,10 +68,6 @@ public class Game : MonoBehaviour
                 {
                     mMap.mMap[i][j].GetComponent<MeshRenderer>().materials = mMap.AccessibleTiles[0].GetComponent<MeshRenderer>().sharedMaterials;
                 }
-                else
-                {
-                    //mMap.mMap[i][j].GetComponent<MeshRenderer>().materials = mMap.InaccessibleTiles[4].GetComponent<MeshRenderer>().sharedMaterials;
-                }
             }
         }
 
@@ -79,7 +75,6 @@ public class Game : MonoBehaviour
         int hits2 = Physics.RaycastNonAlloc(screenLook, mRaycastHits);
         if (hits2 > 0)
         {
-
             EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
 
             Debug.Log(string.Format(tile.Type));
@@ -112,6 +107,8 @@ public class Game : MonoBehaviour
 
     private void UpdatePlayer()
     {
+        Debug.Log(mCharacter[0].CurrentTarget);
+
         // Check to see if the player has clicked a tile and if they have, try to find a path to that 
         // tile. If we find a path then the character will move along it to the clicked tile. 
         if (Input.GetMouseButtonDown(0))
@@ -137,18 +134,21 @@ public class Game : MonoBehaviour
                     {
                         //for (int i = 4; i < 10; i++)
                         //{
-                            //string objType = "Object: " + i;
-                            //Debug.Log("objType: " + i);
-                            //if (tile.Type == objType)
-                            //{
-                                EnvironmentTile tile2 = CheckAround(tile);
-                                route = mMap.Solve(mCharacter[0].CurrentPosition, tile2, "player");
-                                mCharacter[0].GoTo(route);
-                                mCharacter[0].CurrentTarget = tile;
-                                mCharacter[0].Forage(ref mMap, ref mMap.mAll);
-                                //break;
-                            //}
+                        //string objType = "Object: " + i;
+                        //Debug.Log("objType: " + i);
+                        //if (tile.Type == objType)
+                        //{
+                        if (tile.Type == "rock")
+                        {
+                            EnvironmentTile tile2 = CheckAround(tile);
+                            route = mMap.Solve(mCharacter[0].CurrentPosition, tile2, "player");
+                            mCharacter[0].GoTo(route);
+                            mCharacter[0].CurrentTarget = tile;
+                            //mCharacter[0].Forage(ref mMap, ref mMap.mAll);
+                        }
+                        //break;
                         //}
+                    //}
                     }
                 }
             }

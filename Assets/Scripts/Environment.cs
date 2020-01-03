@@ -111,18 +111,18 @@ public class Environment : MonoBehaviour
             position.z = -(halfHeight * TileSize);
         }
 
-        float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
+        //float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
 
-        for (int i = 0; i < Size.x; i++)
-        {
-            for (int j = 0; j < Size.y; j++)
-            {
-                if (result[i, j] < 20 && i != 0 && j != 0)
-                {
-                    MakeTileInaccessible(i,j, 0);
-                }
-            }
-        }
+        //for (int i = 0; i < Size.x; i++)
+        //{
+        //    for (int j = 0; j < Size.y; j++)
+        //    {
+        //        if (result[i, j] < 20 && i != 0 && j != 0)
+        //        {
+        //            MakeTileInaccessible(i,j, 0);
+        //        }
+        //    }
+        //}
 
         int randomNumber = Random.Range(0, 100); // Get random number
 
@@ -136,16 +136,21 @@ public class Environment : MonoBehaviour
         //RiverMaker(true);
 
         finalPosition = position;
+
+        MakeTileInaccessible(4, 5, 0);
+        RevertTile(4, 5);
     }
 
     public void RiverMaker(bool direction)
     {
         float riverStartTile;
+        float riverEndTile;
 
         if (direction == true) // pos
         {
             riverStartTile = Random.Range(2, Size.x - 1);
-            for (int i = 0; i < Size.x; i++)
+            riverEndTile = Random.Range(riverStartTile + 3, Size.x - 1);
+            for (int i = (int)Random.Range(0, riverStartTile - 1); i < riverEndTile; i++)
             {
                 MakeTileInaccessible(i, (int)riverStartTile, 4);
             }
@@ -153,7 +158,8 @@ public class Environment : MonoBehaviour
         else
         {
             riverStartTile = Random.Range(2, Size.y - 1);
-            for (int i = 0; i < Size.x; i++)
+            riverEndTile = Random.Range(riverStartTile + 3, Size.y - 1);
+            for (int i = (int)Random.Range(0, riverStartTile - 1); i < riverEndTile; i++)
             {
                 MakeTileInaccessible((int)riverStartTile, i, 4);
             }
@@ -181,18 +187,12 @@ public class Environment : MonoBehaviour
             case 4: prefabNA = InaccessibleTiles[16]; break;
         }
 
-        //mMap[x][y].GetComponent<MeshRenderer>(). = prefabNA.GetComponent<MeshRenderer>();
-        //EnvironmentTile tileNA = Instantiate(prefabNA, finalPosition, Quaternion.identity, transform);
-        //t.Position = new Vector3(finalPosition.x + (TileSize / 2), TileHeight, finalPosition.z + (TileSize / 2));
-        //t.gameObject.name = string.Format("Tile({0},{1})", x, y);
-        //tile.GetComponent<MeshRenderer>().materials = mMap.AccessibleTiles[1].GetComponent<MeshRenderer>().sharedMaterials;
-
         var t = mMap[x][y];
 
         t.GetComponent<MeshFilter>().sharedMesh = prefabNA.GetComponent<MeshFilter>().sharedMesh;
         t.GetComponent<MeshRenderer>().materials = prefabNA.GetComponent<MeshRenderer>().sharedMaterials;
         if (type == 0) {
-            Instantiate(prefabNA.GetComponentInChildren<MeshFilter>(), finalPosition, mMap[x][y].transform.rotation);
+            Instantiate(prefabNA.GetComponentInChildren<MeshFilter>(), finalPosition, mMap[x][y].transform.rotation, t.transform);
         }
         t.IsAccessible = false;
 
@@ -205,6 +205,34 @@ public class Environment : MonoBehaviour
             case 4: t.Type = "water"; break;
             default: t.Type = "error"; break;
         }
+
+        if (mAll.FindIndex(ind => ind.Equals(mMap[x][y])) != -1)
+        {
+            mAll[mAll.FindIndex(ind => ind.Equals(mMap[x][y]))] = t;
+        }
+
+        mMap[x][y] = t;
+    }
+
+    public void RevertTile(int x, int y)
+    {
+        finalPosition = mMap[x][y].transform.position;
+
+        EnvironmentTile prefabA = AccessibleTiles[0];
+
+        var t = mMap[x][y];
+
+        t.GetComponent<MeshFilter>().sharedMesh = prefabA.GetComponent<MeshFilter>().sharedMesh;
+        t.GetComponent<MeshRenderer>().materials = prefabA.GetComponent<MeshRenderer>().sharedMaterials;
+        t.IsAccessible = true;
+        t.Type = string.Format("ground");
+
+        //Destroy(t.GetComponentInChildren<MeshFilter>().sharedMesh);
+
+        foreach (Transform child in t.transform)
+        {
+            GameObject.Destroy(child.gameObject);
+        }// ???
 
         if (mAll.FindIndex(ind => ind.Equals(mMap[x][y])) != -1)
         {
