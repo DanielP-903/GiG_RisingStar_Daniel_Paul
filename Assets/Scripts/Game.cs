@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
@@ -8,19 +9,18 @@ public class Game : MonoBehaviour
 {
     [SerializeField] private Camera MainCamera;
     [SerializeField] private Character[] Character = new Character[2];
-    //[SerializeField] private Character Enemy;
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
     [SerializeField] private Transform CharacterStart;
     [SerializeField] private Transform EnemyStart;
-
+    [SerializeField] public int resStone;
+    
     private RaycastHit[] mRaycastHits;
     private Character[] mCharacter = new Character[2];
-    private Character mEnemy;
     private Environment mMap;
     private EnvironmentTile posLastFrame;
 
-    public int characterSelection;
+    public int characterSelection = -1;
 
     public Material texMaterial;
     public bool isGameStarted;
@@ -36,6 +36,8 @@ public class Game : MonoBehaviour
         mCharacter[0].tag = "Player";
         mCharacter[1].tag = "Player";
         mCharacter[0].CurrentTarget = null;
+        mCharacter[1].CurrentTarget = null;
+        characterSelection = -1;
         //mEnemy = Instantiate(Enemy, transform);
         ShowMenu(true);
     }
@@ -66,7 +68,8 @@ public class Game : MonoBehaviour
             {
                 if (mMap.mMap[i][j].IsAccessible == true)
                 {
-                    mMap.mMap[i][j].GetComponent<MeshRenderer>().materials = mMap.AccessibleTiles[0].GetComponent<MeshRenderer>().sharedMaterials;
+                    mMap.mMap[i][j].GetComponent<MeshRenderer>().materials =
+                        mMap.AccessibleTiles[0].GetComponent<MeshRenderer>().sharedMaterials;
                 }
             }
         }
@@ -84,7 +87,8 @@ public class Game : MonoBehaviour
             {
                 if (tile.Type == "ground")
                 {
-                    tile.GetComponent<MeshRenderer>().materials = mMap.AccessibleTiles[1].GetComponent<MeshRenderer>().sharedMaterials;
+                    tile.GetComponent<MeshRenderer>().materials =
+                        mMap.AccessibleTiles[1].GetComponent<MeshRenderer>().sharedMaterials;
                 }
             }
         }
@@ -107,7 +111,7 @@ public class Game : MonoBehaviour
 
     private void UpdatePlayer()
     {
-        Debug.Log(mCharacter[0].CurrentTarget);
+        Debug.Log(mCharacter[characterSelection].CurrentTarget);
 
         // Check to see if the player has clicked a tile and if they have, try to find a path to that 
         // tile. If we find a path then the character will move along it to the clicked tile. 
@@ -123,35 +127,68 @@ public class Game : MonoBehaviour
                 {
                     List<EnvironmentTile> route;
 
-                    //Debug.Log(string.Format(tile.Type));
-
                     if (tile.Type == "ground")
                     {
-                        route = mMap.Solve(mCharacter[0].CurrentPosition, tile, "player");
-                        mCharacter[0].GoTo(route);
+                        route = mMap.Solve(mCharacter[characterSelection].CurrentPosition, tile, "player");
+                        mCharacter[characterSelection].GoTo(route);
+                        mCharacter[characterSelection].CurrentTarget = null;
                     }
-                    else
+                    else if (tile.Type == "rock")
                     {
-                        //for (int i = 4; i < 10; i++)
-                        //{
-                        //string objType = "Object: " + i;
-                        //Debug.Log("objType: " + i);
-                        //if (tile.Type == objType)
-                        //{
-                        if (tile.Type == "rock")
-                        {
-                            EnvironmentTile tile2 = CheckAround(tile);
-                            route = mMap.Solve(mCharacter[0].CurrentPosition, tile2, "player");
-                            mCharacter[0].GoTo(route);
-                            mCharacter[0].CurrentTarget = tile;
-                            //mCharacter[0].Forage(ref mMap, ref mMap.mAll);
-                        }
-                        //break;
-                        //}
-                    //}
+                        EnvironmentTile tile2 = CheckAround(tile);
+                        route = mMap.Solve(mCharacter[characterSelection].CurrentPosition, tile2, "player");
+                        mCharacter[characterSelection].GoTo(route);
+                        mCharacter[characterSelection].CurrentTarget = tile;
                     }
                 }
             }
+        }
+
+        if (mCharacter[characterSelection].CurrentTarget != null)
+        {
+            Vector2Int pos = FindIndex(mCharacter[characterSelection].CurrentTarget);
+
+            if (mMap.mMap[pos.x][pos.y + 1] != null)
+            {
+                if (mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1])
+                {
+                }
+
+            }
+
+            if (mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1] ||
+                mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1] ||
+                mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y] ||
+                mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
+            {
+                mCharacter[characterSelection].Forage(ref mMap, ref mMap.mAll);
+            }
+        }
+    }
+
+    private void UpdateGame()
+    {
+        if (Input.GetMouseButtonDown(0) && characterSelection == -1)
+        {
+            Ray screenClick = MainCamera.ScreenPointToRay(Input.mousePosition);
+            int hits = Physics.RaycastNonAlloc(screenClick, mRaycastHits);
+            if (hits > 0)
+            {
+                EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
+
+                for (int i = 0; i < Character.Length; i++)
+                {
+                    if (mCharacter[i].CurrentPosition == tile)
+                    {
+                        characterSelection = i;
+                    }
+                }
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            characterSelection = -1;
         }
     }
 
@@ -174,11 +211,14 @@ public class Game : MonoBehaviour
     {
         if (isGameStarted)
         {
-            UpdatePlayer();
+            UpdateGame();
 
-            CheckSelectedTile();
+            if (characterSelection != -1)
+            {
+                UpdatePlayer();
 
-            //UpdateEnemy();
+                CheckSelectedTile();
+            }
         }
     }
 
@@ -193,8 +233,9 @@ public class Game : MonoBehaviour
             {
                 mCharacter[0].transform.position = CharacterStart.position;
                 mCharacter[0].transform.rotation = CharacterStart.rotation;
-                //mEnemy.transform.position = EnemyStart.position;
-                //mEnemy.transform.rotation = EnemyStart.rotation;
+                mCharacter[1].transform.position = new Vector3(-80,0,-60);
+                mCharacter[1].transform.rotation = CharacterStart.rotation;
+
                 mMap.CleanUpWorld();
 
                 isGameStarted = false;
@@ -204,10 +245,10 @@ public class Game : MonoBehaviour
                 mCharacter[0].transform.position = mMap.Start.Position;
                 mCharacter[0].transform.rotation = Quaternion.identity;
                 mCharacter[0].CurrentPosition = mMap.Start;
-
-                //mEnemy.transform.position = mMap.Start.Position;
-                //mEnemy.transform.rotation = Quaternion.identity;
-                //mEnemy.CurrentPosition = mMap.Start;
+                
+                mCharacter[1].transform.position = mMap.Start.Position;
+                mCharacter[1].transform.rotation = Quaternion.identity;
+                mCharacter[1].CurrentPosition = mMap.mMap[0][2];
 
                 isGameStarted = true;
             }

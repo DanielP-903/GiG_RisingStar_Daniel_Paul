@@ -111,29 +111,29 @@ public class Environment : MonoBehaviour
             position.z = -(halfHeight * TileSize);
         }
 
-        //float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
+        float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
 
-        //for (int i = 0; i < Size.x; i++)
-        //{
-        //    for (int j = 0; j < Size.y; j++)
-        //    {
-        //        if (result[i, j] < 20 && i != 0 && j != 0)
-        //        {
-        //            MakeTileInaccessible(i,j, 0);
-        //        }
-        //    }
-        //}
+        for (int i = 0; i < Size.x; i++)
+        {
+            for (int j = 0; j < Size.y; j++)
+            {
+                if (result[i, j] < 20 && i != 0 && j != 0)
+                {
+                    MakeTileInaccessible(i, j, 0);
+                }
+            }
+        }
 
         int randomNumber = Random.Range(0, 100); // Get random number
 
         if (randomNumber < 50) {
-            //RiverMaker(true);
+            RiverMaker(true);
         }
         else {
-            //RiverMaker(false);
+            RiverMaker(false);
         }
 
-        //RiverMaker(true);
+        RiverMaker(true);
 
         finalPosition = position;
 

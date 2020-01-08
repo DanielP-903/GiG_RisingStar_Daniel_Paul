@@ -44,31 +44,14 @@ public class Character : MonoBehaviour
 
             Vector2Int pos = FindIndex(CurrentTarget, mMap);
 
-            Vector3 finalPosition;
+            Vector3 tilePosition = mMap.mMap[pos.x][pos.y].transform.position;
 
-            finalPosition.x = mMap.mMap[pos.x][pos.y].transform.position.x;
-            finalPosition.y = mMap.mMap[pos.x][pos.y].transform.position.y;
-            finalPosition.z = mMap.mMap[pos.x][pos.y].transform.position.z;
+            CurrentTarget.Health = 0;
 
-            Destroy(mMap.mMap[pos.x][pos.y].gameObject);
-
-            CurrentTarget.IsAccessible = true;
-
-            EnvironmentTile prefabA = mMap.AccessibleTiles[0];
-            EnvironmentTile tileA = Instantiate(prefabA, finalPosition, Quaternion.identity, transform);
-            
-            tileA.Position = new Vector3(finalPosition.x + (TileSize / 2), TileHeight, finalPosition.z + (TileSize / 2));
-            tileA.IsAccessible = false;
-            tileA.gameObject.name = string.Format("Tile({0},{1})", pos.x, pos.y);
-            tileA.Type = string.Format("ground");
-            
-            mMap.mMap[pos.x][pos.y] = tileA;
-            
-            Environment temp = mMap;
-
-            if (mAll.FindIndex(ind => ind.Equals(temp.mMap[pos.x][pos.y])) != -1)
+            if (CurrentTarget.Health <= 0)
             {
-                mAll[mAll.FindIndex(ind => ind.Equals(temp.mMap[pos.x][pos.y]))] = tileA;
+                mMap.RevertTile(pos.x,pos.y);
+                CurrentTarget = null;
             }
         }
     }
