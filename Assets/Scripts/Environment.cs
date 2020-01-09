@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using Color = UnityEngine.Color;
 using Random = UnityEngine.Random;
 
@@ -143,16 +144,23 @@ public class Environment : MonoBehaviour
 
     public void RiverMaker(bool direction)
     {
-        float riverStartTile;
-        float riverEndTile;
+        float riverStartTile = 0.0f;
+        float riverEndTile = float.MaxValue;
 
         if (direction == true) // pos
         {
             riverStartTile = Random.Range(2, Size.x - 1);
-            riverEndTile = Random.Range(riverStartTile + 3, Size.x - 1);
+
+            while (riverEndTile > mMap.Length)
+            {
+                riverEndTile = Random.Range(riverStartTile + 3, Size.x - 1);
+            }
             for (int i = (int)Random.Range(0, riverStartTile - 1); i < riverEndTile; i++)
             {
-                MakeTileInaccessible(i, (int)riverStartTile, 4);
+                if (mMap[i][(int)riverStartTile].IsAccessible == true)
+                {
+                    MakeTileInaccessible(i, (int) riverStartTile, 4);
+                }
             }
         }
         else
@@ -161,7 +169,10 @@ public class Environment : MonoBehaviour
             riverEndTile = Random.Range(riverStartTile + 3, Size.y - 1);
             for (int i = (int)Random.Range(0, riverStartTile - 1); i < riverEndTile; i++)
             {
-                MakeTileInaccessible((int)riverStartTile, i, 4);
+                if (mMap[(int) riverStartTile][i].IsAccessible == true)
+                {
+                    MakeTileInaccessible((int) riverStartTile, i, 4);
+                } 
             }
         }
     }

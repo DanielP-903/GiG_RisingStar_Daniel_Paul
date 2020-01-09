@@ -8,6 +8,7 @@ using UnityEngine.Tilemaps;
 public class Game : MonoBehaviour
 {
     [SerializeField] private Camera MainCamera;
+    [SerializeField] private Camera OverviewCamera;
     [SerializeField] private Character[] Character = new Character[2];
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
@@ -20,6 +21,8 @@ public class Game : MonoBehaviour
     private Environment mMap;
     private EnvironmentTile posLastFrame;
 
+    private Camera currentCam;
+
     public int characterSelection = -1;
 
     public Material texMaterial;
@@ -30,15 +33,22 @@ public class Game : MonoBehaviour
     void Start()
     {
         mRaycastHits = new RaycastHit[NumberOfRaycastHits];
+
         mMap = GetComponentInChildren<Environment>();
+
         mCharacter[0] = Instantiate(Character[0], transform);
         mCharacter[1] = Instantiate(Character[1], transform);
+
         mCharacter[0].tag = "Player";
         mCharacter[1].tag = "Player";
+
         mCharacter[0].CurrentTarget = null;
         mCharacter[1].CurrentTarget = null;
+
         characterSelection = -1;
-        //mEnemy = Instantiate(Enemy, transform);
+
+
+
         ShowMenu(true);
     }
 
@@ -74,7 +84,7 @@ public class Game : MonoBehaviour
             }
         }
 
-        Ray screenLook = MainCamera.ScreenPointToRay(Input.mousePosition);
+        Ray screenLook = currentCam.ScreenPointToRay(Input.mousePosition);
         int hits2 = Physics.RaycastNonAlloc(screenLook, mRaycastHits);
         if (hits2 > 0)
         {
@@ -117,7 +127,7 @@ public class Game : MonoBehaviour
         // tile. If we find a path then the character will move along it to the clicked tile. 
         if (Input.GetMouseButtonDown(0))
         {
-            Ray screenClick = MainCamera.ScreenPointToRay(Input.mousePosition);
+            Ray screenClick = currentCam.ScreenPointToRay(Input.mousePosition);
             int hits = Physics.RaycastNonAlloc(screenClick, mRaycastHits);
             if (hits > 0)
             {
@@ -152,16 +162,32 @@ public class Game : MonoBehaviour
             {
                 if (mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1])
                 {
+                    mCharacter[characterSelection].Forage(ref mMap, ref mMap.mAll);
                 }
-
-            }
-
-            if (mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1] ||
-                mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1] ||
-                mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y] ||
-                mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
+            } 
+            
+            if (mMap.mMap[pos.x][pos.y - 1] != null)
             {
-                mCharacter[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                if (mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1])
+                {
+                    mCharacter[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                }
+            }
+            
+            if (mMap.mMap[pos.x + 1][pos.y] != null)
+            {
+                if (mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y])
+                {
+                    mCharacter[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                }
+            }
+            
+            if (mMap.mMap[pos.x - 1][pos.y] != null)
+            {
+                if (mCharacter[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
+                {
+                    mCharacter[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                }
             }
         }
     }
@@ -170,7 +196,7 @@ public class Game : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0) && characterSelection == -1)
         {
-            Ray screenClick = MainCamera.ScreenPointToRay(Input.mousePosition);
+            Ray screenClick = currentCam.ScreenPointToRay(Input.mousePosition);
             int hits = Physics.RaycastNonAlloc(screenClick, mRaycastHits);
             if (hits > 0)
             {
@@ -179,11 +205,14 @@ public class Game : MonoBehaviour
                 for (int i = 0; i < Character.Length; i++)
                 {
                     if (mCharacter[i].CurrentPosition == tile)
-                    {
+                    { 
                         for (int j = 0; j < Character.Length; j++)
                         {
                             mCharacter[j].gameObject.tag = "default";
                         }
+                        MainCamera.enabled = true;
+                        OverviewCamera.enabled = false;
+                        currentCam = MainCamera;
                         characterSelection = i;
                         mCharacter[i].gameObject.tag = "Player";
                     }
@@ -193,8 +222,46 @@ public class Game : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            for (int j = 0; j < Character.Length; j++)
+            {
+                mCharacter[j].gameObject.tag = "default";
+            }
+
+            MainCamera.enabled = false;
+            OverviewCamera.enabled = true;
+
+            currentCam = OverviewCamera;
+
             characterSelection = -1;
         }
+
+
+        if (currentCam == OverviewCamera)
+        {
+            Vector3 addVec = currentCam.transform.position;
+
+            if (Input.GetKey(KeyCode.A))
+            {
+                addVec += (new Vector3(-1, 0, 0));
+            }
+            else if (Input.GetKey(KeyCode.D))
+            {
+                addVec += (new Vector3(1, 0, 0));
+            }
+
+            if (Input.GetKey(KeyCode.W))
+            {
+                addVec += (new Vector3(0, 0, 1));
+            }
+            else if (Input.GetKey(KeyCode.S))
+            {
+                addVec += (new Vector3(0, 0, -1));
+            }
+
+            currentCam.transform.position = addVec;
+            OverviewCamera.transform.position = addVec;
+        }
+
     }
 
     //private void UpdateEnemy()
@@ -243,6 +310,11 @@ public class Game : MonoBehaviour
                 mMap.CleanUpWorld();
 
                 isGameStarted = false;
+
+                MainCamera.enabled = true;
+                OverviewCamera.enabled = false;
+
+                currentCam = MainCamera;
             }
             else
             {
@@ -255,6 +327,11 @@ public class Game : MonoBehaviour
                 mCharacter[1].CurrentPosition = mMap.Start;
 
                 isGameStarted = true;
+
+                MainCamera.enabled = false;
+                OverviewCamera.enabled = true;
+
+                currentCam = OverviewCamera;
             }
         }
     }
