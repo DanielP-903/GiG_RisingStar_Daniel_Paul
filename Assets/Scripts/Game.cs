@@ -180,7 +180,12 @@ public class Game : MonoBehaviour
                 {
                     if (mCharacter[i].CurrentPosition == tile)
                     {
+                        for (int j = 0; j < Character.Length; j++)
+                        {
+                            mCharacter[j].gameObject.tag = "default";
+                        }
                         characterSelection = i;
+                        mCharacter[i].gameObject.tag = "Player";
                     }
                 }
             }
@@ -192,20 +197,19 @@ public class Game : MonoBehaviour
         }
     }
 
-    private void UpdateEnemy()
-    {
-        if (posLastFrame != mCharacter[0].CurrentPosition)//transform.position)
-        {
-            EnvironmentTile tile2 = CheckAround(mCharacter[0].CurrentPosition);
-            if (tile2 != null)
-            {
-                //List<EnvironmentTile> route2 = mMap.Solve(mEnemy.CurrentPosition, tile2, "enemy");
-                //mEnemy.GoTo(route2);
-            }
-        }
-
-        posLastFrame = mCharacter[0].CurrentPosition;
-    }
+    //private void UpdateEnemy()
+    //{
+    //    if (posLastFrame != mCharacter[0].CurrentPosition)//transform.position)
+    //    {
+    //        EnvironmentTile tile2 = CheckAround(mCharacter[0].CurrentPosition);
+    //        if (tile2 != null)
+    //        {
+    //            //List<EnvironmentTile> route2 = mMap.Solve(mEnemy.CurrentPosition, tile2, "enemy");
+    //            //mEnemy.GoTo(route2);
+    //        }
+    //    }
+    //    posLastFrame = mCharacter[0].CurrentPosition;
+    //}
 
     private void Update()
     {
@@ -248,7 +252,7 @@ public class Game : MonoBehaviour
                 
                 mCharacter[1].transform.position = mMap.Start.Position;
                 mCharacter[1].transform.rotation = Quaternion.identity;
-                mCharacter[1].CurrentPosition = mMap.mMap[0][2];
+                mCharacter[1].CurrentPosition = mMap.Start;
 
                 isGameStarted = true;
             }
