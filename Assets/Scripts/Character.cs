@@ -15,6 +15,14 @@ public class Character : MonoBehaviour
     private const float TileSize = 10.0f;
     private const float TileHeight = 2.5f;
 
+    public enum CharacterType
+    {
+        Forager,
+        Warrior
+    };
+
+    public CharacterType MyType { get; set; }
+
     private IEnumerator DoMove(Vector3 position, Vector3 destination)
     {
         // Move between the two specified positions over the specified amount of time

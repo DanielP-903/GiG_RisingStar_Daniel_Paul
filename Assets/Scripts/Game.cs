@@ -42,6 +42,9 @@ public class Game : MonoBehaviour
         mCharacter[0].tag = "Player";
         mCharacter[1].tag = "Player";
 
+        mCharacter[0].MyType = global::Character.CharacterType.Forager;
+        mCharacter[1].MyType = global::Character.CharacterType.Forager;
+
         mCharacter[0].CurrentTarget = null;
         mCharacter[1].CurrentTarget = null;
 

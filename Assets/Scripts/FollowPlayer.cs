@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class follow_player : MonoBehaviour
+public class FollowPlayer : MonoBehaviour
 {
     private Vector3 initialPos;
 
