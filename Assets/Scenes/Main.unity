@@ -1332,7 +1332,7 @@ MonoBehaviour:
   m_enableWordWrapping: 1
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
-  m_firstOverflowCharacterIndex: -1
+  m_firstOverflowCharacterIndex: 6
   m_linkedTextComponent: {fileID: 0}
   m_isLinkedTextComponent: 0
   m_isTextTruncated: 0
@@ -1361,7 +1361,7 @@ MonoBehaviour:
     spaceCount: 1
     wordCount: 2
     linkCount: 0
-    lineCount: 1
+    lineCount: 3
     pageCount: 1
     materialCount: 1
   m_isUsingLegacyAnimationComponent: 0
@@ -1437,6 +1437,8 @@ MonoBehaviour:
   - {fileID: 8392035395846825301, guid: 4c0f70225ccee9c4eb8b566b0124f754, type: 3}
   - {fileID: 428312736237616533, guid: b2937a6c300c0624a8fb7c65bf8b21b3, type: 3}
   - {fileID: 571534609703175618, guid: a22f36318d1747049bdbb990d8619721, type: 3}
+  - {fileID: 7603024997213197666, guid: 8b7282f9fc12a7c43bd7505a57d32a88, type: 3}
+  - {fileID: 7603024997213197666, guid: e288f302a7352fc4f9b5bb74ac00bb2e, type: 3}
   Size: {x: 17, y: 17}
   AccessiblePercentage: 0.85
   mAll: []

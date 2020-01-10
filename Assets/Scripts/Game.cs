@@ -245,13 +245,30 @@ public class Game : MonoBehaviour
 
             if (Input.GetKey(KeyCode.A))
             {
+                addVec += (new Vector3(-1, 0, 1));
+            }
+            else if (Input.GetKey(KeyCode.D))
+            {
+                addVec += (new Vector3(1, 0, -1));
+            } 
+            if (Input.GetKey(KeyCode.W))
+            {
+                addVec += (new Vector3(1.5f, 0, 1.5f));
+            }
+            else if (Input.GetKey(KeyCode.S))
+            {
+                addVec += (new Vector3(-1.5f, 0, -1.5f));
+            }
+
+            /*
+            if (Input.GetKey(KeyCode.A))
+            {
                 addVec += (new Vector3(-1, 0, 0));
             }
             else if (Input.GetKey(KeyCode.D))
             {
                 addVec += (new Vector3(1, 0, 0));
             }
-
             if (Input.GetKey(KeyCode.W))
             {
                 addVec += (new Vector3(0, 0, 1));
@@ -260,6 +277,7 @@ public class Game : MonoBehaviour
             {
                 addVec += (new Vector3(0, 0, -1));
             }
+            */
 
             currentCam.transform.position = addVec;
             OverviewCamera.transform.position = addVec;

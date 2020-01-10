@@ -111,6 +111,8 @@ public class Environment : MonoBehaviour
             position.x += TileSize;
             position.z = -(halfHeight * TileSize);
         }
+        MakeTileInaccessible(1, 1, 5);
+        MakeTileInaccessible(Size.x - 2, Size.y - 2, 6);
 
         float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
 
@@ -120,7 +122,10 @@ public class Environment : MonoBehaviour
             {
                 if (result[i, j] < 20 && i != 0 && j != 0)
                 {
-                    MakeTileInaccessible(i, j, 0);
+                    if (mMap[i][j].IsAccessible == true)
+                    {
+                        MakeTileInaccessible(i, j, 0);
+                    }
                 }
             }
         }
@@ -140,6 +145,7 @@ public class Environment : MonoBehaviour
 
         MakeTileInaccessible(4, 5, 0);
         RevertTile(4, 5);
+
     }
 
     public void RiverMaker(bool direction)
@@ -183,6 +189,7 @@ public class Environment : MonoBehaviour
     // 2 = trees
     // 3 = logs
     // 4 = water
+    // 5 = player base
     public void MakeTileInaccessible(int x, int y, int type) 
     {
         finalPosition = mMap[x][y].transform.position;
@@ -196,13 +203,15 @@ public class Environment : MonoBehaviour
             case 2: prefabNA = InaccessibleTiles[Random.Range(2, 4)]; break;
             case 3: prefabNA = InaccessibleTiles[Random.Range(0, 2)]; break;
             case 4: prefabNA = InaccessibleTiles[16]; break;
+            case 5: prefabNA = InaccessibleTiles[17]; break;
+            case 6: prefabNA = InaccessibleTiles[18]; break;
         }
 
         var t = mMap[x][y];
 
         t.GetComponent<MeshFilter>().sharedMesh = prefabNA.GetComponent<MeshFilter>().sharedMesh;
         t.GetComponent<MeshRenderer>().materials = prefabNA.GetComponent<MeshRenderer>().sharedMaterials;
-        if (type == 0) {
+        if (type == 0 || type == 5 || type == 6) {
             Instantiate(prefabNA.GetComponentInChildren<MeshFilter>(), finalPosition, mMap[x][y].transform.rotation, t.transform);
         }
         t.IsAccessible = false;
@@ -214,6 +223,8 @@ public class Environment : MonoBehaviour
             case 2: t.Type = "tree"; break;
             case 3: t.Type = "logs"; break;
             case 4: t.Type = "water"; break;
+            case 5: t.Type = "player base"; break;
+            case 6: t.Type = "enemy base"; break;
             default: t.Type = "error"; break;
         }
 
