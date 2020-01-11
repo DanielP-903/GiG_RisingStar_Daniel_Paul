@@ -43,27 +43,6 @@ public class Character : MonoBehaviour
         }
     }
 
-    public void Forage(ref Environment mMap, ref List<EnvironmentTile> mAll)
-    {
-        if (CurrentTarget != null)
-        {
-            Debug.Log("Foraging...");
-            float otherHealth = CurrentTarget.Health;
-
-            Vector2Int pos = FindIndex(CurrentTarget, mMap);
-
-            Vector3 tilePosition = mMap.mMap[pos.x][pos.y].transform.position;
-
-            CurrentTarget.Health = 0;
-
-            if (CurrentTarget.Health <= 0)
-            {
-                mMap.RevertTile(pos.x,pos.y);
-                CurrentTarget = null;
-            }
-        }
-    }
-
     public Vector2Int FindIndex(EnvironmentTile tile, Environment mMap)
     {
         Vector2Int rVal = new Vector2Int(-1, -1);

@@ -793,14 +793,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MainCamera: {fileID: 963194227}
   OverviewCamera: {fileID: 1573201873}
-  Character:
-  - {fileID: 792252150293316475, guid: 0ec771fc79c748e4694b82068b3883e1, type: 3}
-  - {fileID: 792252150293316475, guid: 330065b5db45dc84487608cacab58e84, type: 3}
+  foragers:
+  - {fileID: 4686278702115637381, guid: a0a5cd3148b785c469d30bd694a8c129, type: 3}
+  - {fileID: 4686278702115637381, guid: a0a5cd3148b785c469d30bd694a8c129, type: 3}
   Menu: {fileID: 2099476870}
   Hud: {fileID: 1579498796}
   CharacterStart: {fileID: 561634765}
   EnemyStart: {fileID: 366655429}
   resStone: 0
+  plrBaseHealth: 100
+  enmBaseHealth: 100
   characterSelection: 0
   texMaterial: {fileID: 2100000, guid: c4e472abef2548a4abdf9bbf325d0a3e, type: 2}
   isGameStarted: 0
@@ -1332,7 +1334,7 @@ MonoBehaviour:
   m_enableWordWrapping: 1
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
-  m_firstOverflowCharacterIndex: 6
+  m_firstOverflowCharacterIndex: -1
   m_linkedTextComponent: {fileID: 0}
   m_isLinkedTextComponent: 0
   m_isTextTruncated: 0
@@ -1361,7 +1363,7 @@ MonoBehaviour:
     spaceCount: 1
     wordCount: 2
     linkCount: 0
-    lineCount: 3
+    lineCount: 1
     pageCount: 1
     materialCount: 1
   m_isUsingLegacyAnimationComponent: 0
