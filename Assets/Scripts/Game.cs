@@ -13,8 +13,8 @@ public class Game : MonoBehaviour
 
     [SerializeField] private Forager[] foragers = new Forager[2];
     private Forager[] mForagers = new Forager[2];
-    [SerializeField] private Warrior[] warriors = new Warrior[2];
-    private Warrior[] mWarriors = new Warrior[2];
+    [SerializeField] private Warrior[] warriors = new Warrior[1];
+    private Warrior[] mWarriors = new Warrior[1];
 
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
@@ -32,6 +32,7 @@ public class Game : MonoBehaviour
     private Camera currentCam;
 
     public int characterSelection = -1;
+    public Character.CharacterType selectionType = Character.CharacterType.Forager;
 
     public Material texMaterial;
     public bool isGameStarted;
@@ -44,21 +45,20 @@ public class Game : MonoBehaviour
 
         mMap = GetComponentInChildren<Environment>();
 
-        mForagers[0] = Instantiate(foragers[0], transform);
-        mForagers[1] = Instantiate(foragers[1], transform);
+        for (int i = 0; i < 2; i++)
+        {
+            mForagers[i] = Instantiate(foragers[i], transform);
+            mForagers[i].tag = "Player";
+            mForagers[i].MyType = global::Character.CharacterType.Forager;
+            mForagers[i].CurrentTarget = null;
+        }
 
-        mForagers[0].tag = "Player";
-        mForagers[1].tag = "Player";
-
-        mForagers[0].MyType = global::Character.CharacterType.Forager;
-        mForagers[1].MyType = global::Character.CharacterType.Forager;
-
-        mForagers[0].CurrentTarget = null;
-        mForagers[1].CurrentTarget = null;
+        mWarriors[0] = Instantiate(warriors[0], transform);
+        mWarriors[0].tag = "Player";
+        mWarriors[0].MyType = global::Character.CharacterType.Forager;
+        mWarriors[0].CurrentTarget = null;
 
         characterSelection = -1;
-
-
 
         ShowMenu(true);
     }
@@ -89,6 +89,8 @@ public class Game : MonoBehaviour
         {
             Debug.Log("You lose! GAME OVER");
             Application.Quit();
+            Exit();
+            ShowMenu(true);
         }
     }
 
@@ -100,6 +102,7 @@ public class Game : MonoBehaviour
         {
             Debug.Log("You win! GAME OVER");
             Application.Quit();
+            ShowMenu(true);
         }
     }
 
@@ -152,7 +155,7 @@ public class Game : MonoBehaviour
         return null;
     }
 
-    private void UpdatePlayer()
+    private void UpdateForagers()
     {
         Debug.Log(mForagers[characterSelection].CurrentTarget);
 
@@ -224,12 +227,82 @@ public class Game : MonoBehaviour
             }
         }
     }
+    
+    private void UpdateWarriors()
+    {
+        Debug.Log(mWarriors[characterSelection].CurrentTarget);
+
+        // Check to see if the player has clicked a tile and if they have, try to find a path to that 
+        // tile. If we find a path then the character will move along it to the clicked tile. 
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray screenClick = currentCam.ScreenPointToRay(Input.mousePosition);
+            int hits = Physics.RaycastNonAlloc(screenClick, mRaycastHits);
+            if (hits > 0)
+            {
+                EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
+
+                if (tile != null)
+                {
+                    List<EnvironmentTile> route;
+
+                    if (tile.Type == "ground")
+                    {
+                        route = mMap.Solve(mWarriors[characterSelection].CurrentPosition, tile, "player");
+                        mWarriors[characterSelection].GoTo(route);
+                        mWarriors[characterSelection].CurrentTarget = null;
+                    }
+                    else if (tile.Type == "enemy base")
+                    {
+                        EnvironmentTile tile2 = CheckAround(tile);
+                        route = mMap.Solve(mWarriors[characterSelection].CurrentPosition, tile2, "player");
+                        mWarriors[characterSelection].GoTo(route);
+                        mWarriors[characterSelection].CurrentTarget = tile;
+                    }
+                }
+            }
+        }
+
+        if (mWarriors[characterSelection].CurrentTarget != null)
+        {
+            Vector2Int pos = FindIndex(mWarriors[characterSelection].CurrentTarget);
+            if (mMap.mMap[pos.x][pos.y + 1] != null)
+            {
+                if (mWarriors[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1])
+                {
+                    AttackEnemyBase();
+                }
+            }
+            if (mMap.mMap[pos.x][pos.y - 1] != null)
+            {
+                if (mWarriors[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1])
+                {
+                    AttackEnemyBase();
+                }
+            }
+            if (mMap.mMap[pos.x + 1][pos.y] != null)
+            {
+                if (mWarriors[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y])
+                {
+                    AttackEnemyBase();
+                }
+            }
+            if (mMap.mMap[pos.x - 1][pos.y] != null)
+            {
+                if (mWarriors[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
+                {
+                    AttackEnemyBase();
+                }
+            }
+        }
+    }
 
     private void UpdateGame()
     {
         Hud.transform.GetChild(1).GetComponent<Text>().text = "Base Health " + plrBaseHealth;
         Hud.transform.GetChild(2).GetComponent<Text>().text = "Enemy Base Health " + enmBaseHealth;
 
+        bool check = false;
 
         if (Input.GetMouseButtonDown(0) && characterSelection == -1)
         {
@@ -247,11 +320,41 @@ public class Game : MonoBehaviour
                         {
                             mForagers[j].gameObject.tag = "default";
                         }
+                        for (int j = 0; j < warriors.Length; j++)
+                        {
+                            mWarriors[j].gameObject.tag = "default";
+                        }
                         MainCamera.enabled = true;
                         OverviewCamera.enabled = false;
                         currentCam = MainCamera;
                         characterSelection = i;
+                        selectionType = Character.CharacterType.Forager; 
                         mForagers[i].gameObject.tag = "Player";
+                        check = true;
+                    }
+                }
+
+                if (!check)
+                {
+                    for (int i = 0; i < warriors.Length; i++)
+                    {
+                        if (mWarriors[i].CurrentPosition == tile)
+                        {
+                            for (int j = 0; j < warriors.Length; j++)
+                            {
+                                mWarriors[j].gameObject.tag = "default";
+                            }
+                            for (int j = 0; j < foragers.Length; j++)
+                            {
+                                mForagers[j].gameObject.tag = "default";
+                            }
+                            MainCamera.enabled = true;
+                            OverviewCamera.enabled = false;
+                            currentCam = MainCamera;
+                            characterSelection = i;
+                            selectionType = Character.CharacterType.Warrior;
+                            mWarriors[i].gameObject.tag = "Player";
+                        }
                     }
                 }
             }
@@ -263,15 +366,31 @@ public class Game : MonoBehaviour
             {
                 mForagers[j].gameObject.tag = "default";
             }
+            
+            for (int j = 0; j < warriors.Length; j++)
+            {
+                mWarriors[j].gameObject.tag = "default";
+            }
 
             MainCamera.enabled = false;
             OverviewCamera.enabled = true;
 
             currentCam = OverviewCamera;
 
+            for (int i = 0; i < mMap.Size.x; i++)
+            {
+                for (int j = 0; j < mMap.Size.y; j++)
+                {
+                    if (mMap.mMap[i][j].IsAccessible == true)
+                    {
+                        mMap.mMap[i][j].GetComponent<MeshRenderer>().materials =
+                            mMap.AccessibleTiles[0].GetComponent<MeshRenderer>().sharedMaterials;
+                    }
+                }
+            }
+
             characterSelection = -1;
         }
-
 
         if (currentCam == OverviewCamera)
         {
@@ -293,25 +412,6 @@ public class Game : MonoBehaviour
             {
                 addVec += (new Vector3(-1.5f, 0, -1.5f));
             }
-
-            /*
-            if (Input.GetKey(KeyCode.A))
-            {
-                addVec += (new Vector3(-1, 0, 0));
-            }
-            else if (Input.GetKey(KeyCode.D))
-            {
-                addVec += (new Vector3(1, 0, 0));
-            }
-            if (Input.GetKey(KeyCode.W))
-            {
-                addVec += (new Vector3(0, 0, 1));
-            }
-            else if (Input.GetKey(KeyCode.S))
-            {
-                addVec += (new Vector3(0, 0, -1));
-            }
-            */
 
             currentCam.transform.position = addVec;
             OverviewCamera.transform.position = addVec;
@@ -341,8 +441,15 @@ public class Game : MonoBehaviour
 
             if (characterSelection != -1)
             {
-                UpdatePlayer();
-
+                if (selectionType == Character.CharacterType.Forager)
+                {
+                    UpdateForagers();
+                }
+                else
+                {
+                    UpdateWarriors();
+                }
+                
                 CheckSelectedTile();
             }
         }
@@ -358,9 +465,12 @@ public class Game : MonoBehaviour
             if (show)
             {
                 mForagers[0].transform.position = CharacterStart.position;
+                mForagers[1].transform.position = new Vector3(-70,0,-80);
+                mWarriors[0].transform.position = new Vector3(-80,0,-60);
+
                 mForagers[0].transform.rotation = CharacterStart.rotation;
-                mForagers[1].transform.position = new Vector3(-80,0,-60);
                 mForagers[1].transform.rotation = CharacterStart.rotation;
+                mWarriors[0].transform.rotation = CharacterStart.rotation;
 
                 mMap.CleanUpWorld();
 
@@ -370,17 +480,20 @@ public class Game : MonoBehaviour
                 OverviewCamera.enabled = false;
 
                 currentCam = MainCamera;
-                //Hud.transform.GetComponent<Canvas>().renderMode.
             }
             else
             {
                 mForagers[0].transform.position = mMap.Start.Position;
                 mForagers[0].transform.rotation = Quaternion.identity;
                 mForagers[0].CurrentPosition = mMap.Start;
-                
-                mForagers[1].transform.position = mMap.Start.Position;
+
+                mForagers[1].transform.position = new Vector3(-65, 2.5f, -75);
                 mForagers[1].transform.rotation = Quaternion.identity;
-                mForagers[1].CurrentPosition = mMap.Start;
+                mForagers[1].CurrentPosition = mMap.mMap[1][0];
+
+                mWarriors[0].transform.position = new Vector3(-55, 2.5f, -75);
+                mWarriors[0].transform.rotation = Quaternion.identity;
+                mWarriors[0].CurrentPosition = mMap.mMap[2][0];
 
                 isGameStarted = true;
 

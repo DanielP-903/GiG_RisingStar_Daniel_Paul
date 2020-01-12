@@ -21,6 +21,8 @@ public class Character : MonoBehaviour
         Warrior
     };
 
+    public bool playerOwned { get; set; }
+
     public CharacterType MyType { get; set; }
 
     private IEnumerator DoMove(Vector3 position, Vector3 destination)

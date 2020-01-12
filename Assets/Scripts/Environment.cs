@@ -465,9 +465,6 @@ public class Environment : MonoBehaviour
             }
         }
 
-        // Define container for average used in square step
-        float avg = 0;
-
         // Define containers for square end point, initially terrain resolution
         float WIDTH = mapSize - 1;
         float HEIGHT = mapSize - 1;
@@ -504,7 +501,6 @@ public class Environment : MonoBehaviour
 
         // Define iteration number
         int itr = 0;
-        int val = 1;
 
         // Define current width and height for current square
         int CURRENT_WIDTH = 0;
