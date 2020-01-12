@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
 
@@ -9,7 +10,12 @@ public class Game : MonoBehaviour
 {
     [SerializeField] private Camera MainCamera;
     [SerializeField] private Camera OverviewCamera;
+
     [SerializeField] private Forager[] foragers = new Forager[2];
+    private Forager[] mForagers = new Forager[2];
+    [SerializeField] private Warrior[] warriors = new Warrior[2];
+    private Warrior[] mWarriors = new Warrior[2];
+
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
     [SerializeField] private Transform CharacterStart;
@@ -20,7 +26,6 @@ public class Game : MonoBehaviour
     [SerializeField] private float enmBaseHealth = 100.0f;
 
     private RaycastHit[] mRaycastHits;
-    private Forager[] mForagers = new Forager[2];
     private Environment mMap;
     private EnvironmentTile posLastFrame;
 
@@ -222,6 +227,10 @@ public class Game : MonoBehaviour
 
     private void UpdateGame()
     {
+        Hud.transform.GetChild(1).GetComponent<Text>().text = "Base Health " + plrBaseHealth;
+        Hud.transform.GetChild(2).GetComponent<Text>().text = "Enemy Base Health " + enmBaseHealth;
+
+
         if (Input.GetMouseButtonDown(0) && characterSelection == -1)
         {
             Ray screenClick = currentCam.ScreenPointToRay(Input.mousePosition);
@@ -361,6 +370,7 @@ public class Game : MonoBehaviour
                 OverviewCamera.enabled = false;
 
                 currentCam = MainCamera;
+                //Hud.transform.GetComponent<Canvas>().renderMode.
             }
             else
             {
