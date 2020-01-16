@@ -11,10 +11,18 @@ public class Game : MonoBehaviour
     [SerializeField] private Camera MainCamera;
     [SerializeField] private Camera OverviewCamera;
 
+    [SerializeField] private Forager forager;
+    [SerializeField] private Warrior warrior;
+
+    private List<Forager> foragerList;
+    private List<Warrior> warriorList;
     [SerializeField] private Forager[] foragers = new Forager[2];
-    private Forager[] mForagers = new Forager[2];
     [SerializeField] private Warrior[] warriors = new Warrior[1];
+    private Forager[] mForagers = new Forager[2];
     private Warrior[] mWarriors = new Warrior[1];
+
+    [SerializeField] public int maxUnits = 10;
+    public int unitCount = 0;
 
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
@@ -61,6 +69,38 @@ public class Game : MonoBehaviour
         characterSelection = -1;
 
         ShowMenu(true);
+    }
+
+    public void CreateForager()
+    {
+        if (unitCount < maxUnits)
+        {
+            Forager newForager = new Forager();
+            newForager = Instantiate(forager, transform);
+            newForager.tag = "Player";
+            newForager.MyType = Character.CharacterType.Forager;
+            newForager.CurrentTarget = null;
+            foragerList.Add(newForager);
+            Debug.Log("Spawned forager");
+            unitCount++;
+        }
+        else { Debug.Log("Failed to spawn forager"); }
+    }
+
+    public void CreateWarrior()
+    {
+        if (unitCount < maxUnits)
+        {
+            Warrior newWarrior = new Warrior();
+            newWarrior = Instantiate(warrior, transform);
+            newWarrior.tag = "Player";
+            newWarrior.MyType = Character.CharacterType.Warrior;
+            newWarrior.CurrentTarget = null;
+            warriorList.Add(newWarrior);
+            Debug.Log("Spawned warrior");
+            unitCount++;
+        }
+        else { Debug.Log("Failed to spawn warrior"); }
     }
 
     public Vector2Int FindIndex(EnvironmentTile tile)
@@ -157,7 +197,7 @@ public class Game : MonoBehaviour
 
     private void UpdateForagers()
     {
-        Debug.Log(mForagers[characterSelection].CurrentTarget);
+        //Debug.Log(mForagers[characterSelection].CurrentTarget);
 
         // Check to see if the player has clicked a tile and if they have, try to find a path to that 
         // tile. If we find a path then the character will move along it to the clicked tile. 
