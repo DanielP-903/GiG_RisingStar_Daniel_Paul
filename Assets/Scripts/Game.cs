@@ -8,18 +8,24 @@ using UnityEngine.Tilemaps;
 
 public class Game : MonoBehaviour
 {
+    [SerializeField] private int startingCash = 500;
+    [SerializeField] private int foragerCost = 100;
+    [SerializeField] private int warriorCost = 200;
+
+    public int cash = 0;
+
     [SerializeField] private Camera MainCamera;
     [SerializeField] private Camera OverviewCamera;
 
     [SerializeField] private Forager forager;
     [SerializeField] private Warrior warrior;
 
-    private List<Forager> foragerList;
-    private List<Warrior> warriorList;
-    [SerializeField] private Forager[] foragers = new Forager[2];
-    [SerializeField] private Warrior[] warriors = new Warrior[1];
-    private Forager[] mForagers = new Forager[2];
-    private Warrior[] mWarriors = new Warrior[1];
+    private List<Forager> foragerList = new List<Forager>();
+    private List<Warrior> warriorList = new List<Warrior>();
+    //[SerializeField] private Forager[] foragers = new Forager[2];
+    //[SerializeField] private Warrior[] warriors = new Warrior[1];
+    //private Forager[] mForagers = new Forager[2];
+    //private Warrior[] mWarriors = new Warrior[1];
 
     [SerializeField] public int maxUnits = 10;
     public int unitCount = 0;
@@ -53,52 +59,50 @@ public class Game : MonoBehaviour
 
         mMap = GetComponentInChildren<Environment>();
 
-        for (int i = 0; i < 2; i++)
-        {
-            mForagers[i] = Instantiate(foragers[i], transform);
-            mForagers[i].tag = "Player";
-            mForagers[i].MyType = global::Character.CharacterType.Forager;
-            mForagers[i].CurrentTarget = null;
-        }
-
-        mWarriors[0] = Instantiate(warriors[0], transform);
-        mWarriors[0].tag = "Player";
-        mWarriors[0].MyType = global::Character.CharacterType.Forager;
-        mWarriors[0].CurrentTarget = null;
-
         characterSelection = -1;
+
+        cash = startingCash;
 
         ShowMenu(true);
     }
 
     public void CreateForager()
     {
-        if (unitCount < maxUnits)
+        if (unitCount < maxUnits && cash - foragerCost >= 0)
         {
             Forager newForager = new Forager();
+
             newForager = Instantiate(forager, transform);
+            newForager.transform.position = new Vector3(-75, 2.5f, -75);
+            newForager.transform.rotation = Quaternion.identity;
+            newForager.CurrentPosition = mMap.mMap[0][0];
             newForager.tag = "Player";
             newForager.MyType = Character.CharacterType.Forager;
             newForager.CurrentTarget = null;
             foragerList.Add(newForager);
             Debug.Log("Spawned forager");
             unitCount++;
+            cash -= foragerCost;
         }
         else { Debug.Log("Failed to spawn forager"); }
     }
 
     public void CreateWarrior()
     {
-        if (unitCount < maxUnits)
+        if (unitCount < maxUnits && cash - warriorCost >= 0)
         {
             Warrior newWarrior = new Warrior();
             newWarrior = Instantiate(warrior, transform);
+            newWarrior.transform.position = new Vector3(-75, 2.5f, -75);
+            newWarrior.transform.rotation = Quaternion.identity;
+            newWarrior.CurrentPosition = mMap.mMap[0][0];
             newWarrior.tag = "Player";
             newWarrior.MyType = Character.CharacterType.Warrior;
             newWarrior.CurrentTarget = null;
             warriorList.Add(newWarrior);
             Debug.Log("Spawned warrior");
             unitCount++;
+            cash -= warriorCost;
         }
         else { Debug.Log("Failed to spawn warrior"); }
     }
@@ -197,7 +201,7 @@ public class Game : MonoBehaviour
 
     private void UpdateForagers()
     {
-        //Debug.Log(mForagers[characterSelection].CurrentTarget);
+        Debug.Log(foragerList[characterSelection].CurrentTarget);
 
         // Check to see if the player has clicked a tile and if they have, try to find a path to that 
         // tile. If we find a path then the character will move along it to the clicked tile. 
@@ -215,54 +219,54 @@ public class Game : MonoBehaviour
 
                     if (tile.Type == "ground")
                     {
-                        route = mMap.Solve(mForagers[characterSelection].CurrentPosition, tile, "player");
-                        mForagers[characterSelection].GoTo(route);
-                        mForagers[characterSelection].CurrentTarget = null;
+                        route = mMap.Solve(foragerList[characterSelection].CurrentPosition, tile, "player");
+                        foragerList[characterSelection].GoTo(route);
+                        foragerList[characterSelection].CurrentTarget = null;
                     }
                     else if (tile.Type == "rock")
                     {
                         EnvironmentTile tile2 = CheckAround(tile);
-                        route = mMap.Solve(mForagers[characterSelection].CurrentPosition, tile2, "player");
-                        mForagers[characterSelection].GoTo(route);
-                        mForagers[characterSelection].CurrentTarget = tile;
+                        route = mMap.Solve(foragerList[characterSelection].CurrentPosition, tile2, "player");
+                        foragerList[characterSelection].GoTo(route);
+                        foragerList[characterSelection].CurrentTarget = tile;
                     }
                 }
             }
         }
 
-        if (mForagers[characterSelection].CurrentTarget != null)
+        if (foragerList[characterSelection].CurrentTarget != null)
         {
-            Vector2Int pos = FindIndex(mForagers[characterSelection].CurrentTarget);
+            Vector2Int pos = FindIndex(foragerList[characterSelection].CurrentTarget);
 
             if (mMap.mMap[pos.x][pos.y + 1] != null)
             {
-                if (mForagers[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1])
+                if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1])
                 {
-                    mForagers[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                    foragerList[characterSelection].Forage(ref mMap, ref mMap.mAll);
                 }
             } 
             
             if (mMap.mMap[pos.x][pos.y - 1] != null)
             {
-                if (mForagers[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1])
+                if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1])
                 {
-                    mForagers[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                    foragerList[characterSelection].Forage(ref mMap, ref mMap.mAll);
                 }
             }
             
             if (mMap.mMap[pos.x + 1][pos.y] != null)
             {
-                if (mForagers[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y])
+                if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y])
                 {
-                    mForagers[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                    foragerList[characterSelection].Forage(ref mMap, ref mMap.mAll);
                 }
             }
             
             if (mMap.mMap[pos.x - 1][pos.y] != null)
             {
-                if (mForagers[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
+                if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
                 {
-                    mForagers[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                    foragerList[characterSelection].Forage(ref mMap, ref mMap.mAll);
                 }
             }
         }
@@ -270,7 +274,7 @@ public class Game : MonoBehaviour
     
     private void UpdateWarriors()
     {
-        Debug.Log(mWarriors[characterSelection].CurrentTarget);
+        Debug.Log(warriorList[characterSelection].CurrentTarget);
 
         // Check to see if the player has clicked a tile and if they have, try to find a path to that 
         // tile. If we find a path then the character will move along it to the clicked tile. 
@@ -288,48 +292,48 @@ public class Game : MonoBehaviour
 
                     if (tile.Type == "ground")
                     {
-                        route = mMap.Solve(mWarriors[characterSelection].CurrentPosition, tile, "player");
-                        mWarriors[characterSelection].GoTo(route);
-                        mWarriors[characterSelection].CurrentTarget = null;
+                        route = mMap.Solve(warriorList[characterSelection].CurrentPosition, tile, "player");
+                        warriorList[characterSelection].GoTo(route);
+                        warriorList[characterSelection].CurrentTarget = null;
                     }
                     else if (tile.Type == "enemy base")
                     {
                         EnvironmentTile tile2 = CheckAround(tile);
-                        route = mMap.Solve(mWarriors[characterSelection].CurrentPosition, tile2, "player");
-                        mWarriors[characterSelection].GoTo(route);
-                        mWarriors[characterSelection].CurrentTarget = tile;
+                        route = mMap.Solve(warriorList[characterSelection].CurrentPosition, tile2, "player");
+                        warriorList[characterSelection].GoTo(route);
+                        warriorList[characterSelection].CurrentTarget = tile;
                     }
                 }
             }
         }
 
-        if (mWarriors[characterSelection].CurrentTarget != null)
+        if (warriorList[characterSelection].CurrentTarget != null)
         {
-            Vector2Int pos = FindIndex(mWarriors[characterSelection].CurrentTarget);
+            Vector2Int pos = FindIndex(warriorList[characterSelection].CurrentTarget);
             if (mMap.mMap[pos.x][pos.y + 1] != null)
             {
-                if (mWarriors[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1])
+                if (warriorList[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1])
                 {
                     AttackEnemyBase();
                 }
             }
             if (mMap.mMap[pos.x][pos.y - 1] != null)
             {
-                if (mWarriors[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1])
+                if (warriorList[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1])
                 {
                     AttackEnemyBase();
                 }
             }
             if (mMap.mMap[pos.x + 1][pos.y] != null)
             {
-                if (mWarriors[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y])
+                if (warriorList[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y])
                 {
                     AttackEnemyBase();
                 }
             }
             if (mMap.mMap[pos.x - 1][pos.y] != null)
             {
-                if (mWarriors[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
+                if (warriorList[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
                 {
                     AttackEnemyBase();
                 }
@@ -339,8 +343,9 @@ public class Game : MonoBehaviour
 
     private void UpdateGame()
     {
-        Hud.transform.GetChild(1).GetComponent<Text>().text = "Base Health " + plrBaseHealth;
-        Hud.transform.GetChild(2).GetComponent<Text>().text = "Enemy Base Health " + enmBaseHealth;
+        Hud.transform.GetChild(1).GetComponent<Text>().text = "Base Health: " + plrBaseHealth;
+        Hud.transform.GetChild(2).GetComponent<Text>().text = "Enemy Base Health: " + enmBaseHealth;
+        Hud.transform.GetChild(3).GetComponent<Text>().text = "Cash: " + cash;
 
         bool check = false;
 
@@ -352,48 +357,48 @@ public class Game : MonoBehaviour
             {
                 EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
 
-                for (int i = 0; i < foragers.Length; i++)
+                for (int i = 0; i < foragerList.Count; i++)
                 {
-                    if (mForagers[i].CurrentPosition == tile)
+                    if (foragerList[i].CurrentPosition == tile)
                     { 
-                        for (int j = 0; j < foragers.Length; j++)
+                        for (int j = 0; j < foragerList.Count; j++)
                         {
-                            mForagers[j].gameObject.tag = "default";
+                            foragerList[j].gameObject.tag = "default";
                         }
-                        for (int j = 0; j < warriors.Length; j++)
+                        for (int j = 0; j < warriorList.Count; j++)
                         {
-                            mWarriors[j].gameObject.tag = "default";
+                            warriorList[j].gameObject.tag = "default";
                         }
                         MainCamera.enabled = true;
                         OverviewCamera.enabled = false;
                         currentCam = MainCamera;
                         characterSelection = i;
                         selectionType = Character.CharacterType.Forager; 
-                        mForagers[i].gameObject.tag = "Player";
+                        foragerList[i].gameObject.tag = "Player";
                         check = true;
                     }
                 }
 
                 if (!check)
                 {
-                    for (int i = 0; i < warriors.Length; i++)
+                    for (int i = 0; i < warriorList.Count; i++)
                     {
-                        if (mWarriors[i].CurrentPosition == tile)
+                        if (warriorList[i].CurrentPosition == tile)
                         {
-                            for (int j = 0; j < warriors.Length; j++)
+                            for (int j = 0; j < warriorList.Count; j++)
                             {
-                                mWarriors[j].gameObject.tag = "default";
+                                warriorList[j].gameObject.tag = "default";
                             }
-                            for (int j = 0; j < foragers.Length; j++)
+                            for (int j = 0; j < foragerList.Count; j++)
                             {
-                                mForagers[j].gameObject.tag = "default";
+                                foragerList[j].gameObject.tag = "default";
                             }
                             MainCamera.enabled = true;
                             OverviewCamera.enabled = false;
                             currentCam = MainCamera;
                             characterSelection = i;
                             selectionType = Character.CharacterType.Warrior;
-                            mWarriors[i].gameObject.tag = "Player";
+                            warriorList[i].gameObject.tag = "Player";
                         }
                     }
                 }
@@ -402,14 +407,14 @@ public class Game : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            for (int j = 0; j < foragers.Length; j++)
+            for (int j = 0; j < foragerList.Count; j++)
             {
-                mForagers[j].gameObject.tag = "default";
+                foragerList[j].gameObject.tag = "default";
             }
             
-            for (int j = 0; j < warriors.Length; j++)
+            for (int j = 0; j < warriorList.Count; j++)
             {
-                mWarriors[j].gameObject.tag = "default";
+                warriorList[j].gameObject.tag = "default";
             }
 
             MainCamera.enabled = false;
@@ -459,20 +464,6 @@ public class Game : MonoBehaviour
 
     }
 
-    //private void UpdateEnemy()
-    //{
-    //    if (posLastFrame != mForagers[0].CurrentPosition)//transform.position)
-    //    {
-    //        EnvironmentTile tile2 = CheckAround(mForagers[0].CurrentPosition);
-    //        if (tile2 != null)
-    //        {
-    //            //List<EnvironmentTile> route2 = mMap.Solve(mEnemy.CurrentPosition, tile2, "enemy");
-    //            //mEnemy.GoTo(route2);
-    //        }
-    //    }
-    //    posLastFrame = mForagers[0].CurrentPosition;
-    //}
-
     private void Update()
     {
         if (isGameStarted)
@@ -504,13 +495,19 @@ public class Game : MonoBehaviour
 
             if (show)
             {
-                mForagers[0].transform.position = CharacterStart.position;
-                mForagers[1].transform.position = new Vector3(-70,0,-80);
-                mWarriors[0].transform.position = new Vector3(-80,0,-60);
 
-                mForagers[0].transform.rotation = CharacterStart.rotation;
-                mForagers[1].transform.rotation = CharacterStart.rotation;
-                mWarriors[0].transform.rotation = CharacterStart.rotation;
+                foreach (var f in foragerList)
+                {
+                    f.transform.position = CharacterStart.position;
+                    f.transform.rotation = CharacterStart.rotation;
+                }
+
+                foreach (var w in warriorList)
+                {
+                    w.transform.position = CharacterStart.position;
+                    w.transform.rotation = CharacterStart.rotation;
+                }
+
 
                 mMap.CleanUpWorld();
 
@@ -523,17 +520,29 @@ public class Game : MonoBehaviour
             }
             else
             {
-                mForagers[0].transform.position = mMap.Start.Position;
-                mForagers[0].transform.rotation = Quaternion.identity;
-                mForagers[0].CurrentPosition = mMap.Start;
+                cash = startingCash;
 
-                mForagers[1].transform.position = new Vector3(-65, 2.5f, -75);
-                mForagers[1].transform.rotation = Quaternion.identity;
-                mForagers[1].CurrentPosition = mMap.mMap[1][0];
+                int index = 0;
+                float positionInc = -75.0f;
+                foreach (var f in foragerList)
+                {
+                    f.transform.position = new Vector3(positionInc, 2.5f, -75);
+                    f.transform.rotation = Quaternion.identity;
+                    f.CurrentPosition = mMap.mMap[index][0];
+                    index++;
+                    positionInc += 10;
+                }
 
-                mWarriors[0].transform.position = new Vector3(-55, 2.5f, -75);
-                mWarriors[0].transform.rotation = Quaternion.identity;
-                mWarriors[0].CurrentPosition = mMap.mMap[2][0];
+                index = 0;
+                positionInc = -75.0f;
+                foreach (var w in warriorList)
+                {
+                    w.transform.position = new Vector3(positionInc, 2.5f, -75);
+                    w.transform.rotation = Quaternion.identity;
+                    w.CurrentPosition = mMap.mMap[index][0];
+                    index++;
+                    positionInc += 10;
+                }
 
                 isGameStarted = true;
 
