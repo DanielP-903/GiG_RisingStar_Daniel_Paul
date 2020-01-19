@@ -122,7 +122,7 @@ public class Environment : MonoBehaviour
             {
                 if (result[i, j] < 20 && i != 0 && j != 0)
                 {
-                    if (mMap[i][j].IsAccessible == true)
+                    if (mMap[i][j].IsAccessible == true && Random.Range(0,100) > 50)
                     {
                         MakeTileInaccessible(i, j, 0);
                     }
@@ -142,10 +142,26 @@ public class Environment : MonoBehaviour
         RiverMaker(true);
 
         finalPosition = position;
+        
+        Vector2Int BasePosition = new Vector2Int(1, 1);
+        MakeSurroundingTilesAccessible(BasePosition);
+        BasePosition = new Vector2Int(Size.x - 2, Size.y - 2);
+        MakeSurroundingTilesAccessible(BasePosition);
 
-        MakeTileInaccessible(4, 5, 0);
-        RevertTile(4, 5);
+        //MakeTileInaccessible(4, 5, 0);
+        //RevertTile(4, 5);
+    }
 
+    public void MakeSurroundingTilesAccessible(Vector2Int Pos)
+    {
+        RevertTile(Pos.x - 1, Pos.y);
+        RevertTile(Pos.x + 1, Pos.y);
+        RevertTile(Pos.x, Pos.y + 1);
+        RevertTile(Pos.x, Pos.y - 1);
+        RevertTile(Pos.x - 1, Pos.y - 1);
+        RevertTile(Pos.x - 1, Pos.y + 1);
+        RevertTile(Pos.x + 1, Pos.y - 1);
+        RevertTile(Pos.x + 1, Pos.y + 1);
     }
 
     public void RiverMaker(bool direction)
