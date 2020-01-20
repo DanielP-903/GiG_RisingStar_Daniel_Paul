@@ -8,6 +8,8 @@ using UnityEngine.Tilemaps;
 
 public class Game : MonoBehaviour
 {
+    public static Game game;
+
     [SerializeField] private int startingCash = 500;
     [SerializeField] private int foragerCost = 100;
     [SerializeField] private int warriorCost = 200;
@@ -40,7 +42,7 @@ public class Game : MonoBehaviour
     [SerializeField] private float enmBaseHealth = 100.0f;
 
     private RaycastHit[] mRaycastHits;
-    private Environment mMap;
+    public Environment mMap;
     private EnvironmentTile posLastFrame;
 
     private Camera currentCam;
@@ -51,6 +53,8 @@ public class Game : MonoBehaviour
     public Material texMaterial;
     public bool isGameStarted;
 
+    public EnvironmentTile baseTile;
+
     private readonly int NumberOfRaycastHits = 10;
 
     void Start()
@@ -58,6 +62,8 @@ public class Game : MonoBehaviour
         mRaycastHits = new RaycastHit[NumberOfRaycastHits];
 
         mMap = GetComponentInChildren<Environment>();
+        baseTile = GetComponentInChildren<Environment>().baseTile;
+
 
         characterSelection = -1;
 
@@ -70,8 +76,7 @@ public class Game : MonoBehaviour
     {
         if (unitCount < maxUnits && cash - foragerCost >= 0)
         {
-            Forager newForager = new Forager();
-
+            Forager newForager;
             newForager = Instantiate(forager, transform);
             newForager.transform.position = new Vector3(-75, 2.5f, -75);
             newForager.transform.rotation = Quaternion.identity;
@@ -80,7 +85,7 @@ public class Game : MonoBehaviour
             newForager.MyType = Character.CharacterType.Forager;
             newForager.CurrentTarget = null;
             foragerList.Add(newForager);
-            Debug.Log("Spawned forager");
+            //Debug.Log("Spawned forager");
             unitCount++;
             cash -= foragerCost;
         }
@@ -91,7 +96,7 @@ public class Game : MonoBehaviour
     {
         if (unitCount < maxUnits && cash - warriorCost >= 0)
         {
-            Warrior newWarrior = new Warrior();
+            Warrior newWarrior;
             newWarrior = Instantiate(warrior, transform);
             newWarrior.transform.position = new Vector3(-75, 2.5f, -75);
             newWarrior.transform.rotation = Quaternion.identity;
@@ -242,7 +247,7 @@ public class Game : MonoBehaviour
             {
                 if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1])
                 {
-                    foragerList[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                    foragerList[characterSelection].Forage();
                 }
             } 
             
@@ -250,7 +255,7 @@ public class Game : MonoBehaviour
             {
                 if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1])
                 {
-                    foragerList[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                    foragerList[characterSelection].Forage();
                 }
             }
             
@@ -258,7 +263,7 @@ public class Game : MonoBehaviour
             {
                 if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y])
                 {
-                    foragerList[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                    foragerList[characterSelection].Forage();
                 }
             }
             
@@ -266,7 +271,7 @@ public class Game : MonoBehaviour
             {
                 if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
                 {
-                    foragerList[characterSelection].Forage(ref mMap, ref mMap.mAll);
+                    foragerList[characterSelection].Forage();
                 }
             }
         }

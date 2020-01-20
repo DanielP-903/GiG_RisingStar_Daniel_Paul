@@ -15,6 +15,8 @@ public class Character : MonoBehaviour
     private const float TileSize = 10.0f;
     private const float TileHeight = 2.5f;
 
+
+
     public enum CharacterType
     {
         Forager,
@@ -85,5 +87,23 @@ public class Character : MonoBehaviour
         // that clicks can interupt any current route animation
         StopAllCoroutines();
         StartCoroutine(DoGoTo(route));
+    }
+
+    public bool CheckAround(EnvironmentTile destinationTile, Environment mMap)
+    {
+        Vector2Int index = FindIndex(this.CurrentPosition, mMap);
+        Vector2Int destIndex = FindIndex(destinationTile, mMap);
+
+        if (index.x + 1 == destIndex.x && index.y == destIndex.y) { return true; }
+        if (index.x - 1 == destIndex.x && index.y == destIndex.y) { return true; }
+        if (index.x == destIndex.x && index.y + 1 == destIndex.y) { return true; }
+        if (index.x == destIndex.x && index.y - 1 == destIndex.y) { return true; }
+        if (index.x + 1 == destIndex.x && index.y + 1 == destIndex.y) { return true; }
+        if (index.x + 1 == destIndex.x && index.y - 1 == destIndex.y) { return true; }
+        if (index.x - 1 == destIndex.x && index.y + 1 == destIndex.y) { return true; }
+        if (index.x - 1 == destIndex.x && index.y - 1 == destIndex.y) { return true; }
+
+        return false;
+        //return true;
     }
 }

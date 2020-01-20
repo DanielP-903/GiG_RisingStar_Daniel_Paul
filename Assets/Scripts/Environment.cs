@@ -19,6 +19,8 @@ public class Environment : MonoBehaviour
     private List<EnvironmentTile> mToBeTested;
     private List<EnvironmentTile> mLastSolution;
 
+    public EnvironmentTile baseTile;
+
     private readonly Vector3 NodeSize = Vector3.one * 9.0f; 
     private const float TileSize = 10.0f;
     private const float TileHeight = 2.5f;
@@ -112,6 +114,7 @@ public class Environment : MonoBehaviour
             position.z = -(halfHeight * TileSize);
         }
         MakeTileInaccessible(1, 1, 5);
+        baseTile = mMap[1][1];
         MakeTileInaccessible(Size.x - 2, Size.y - 2, 6);
 
         float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
@@ -151,6 +154,8 @@ public class Environment : MonoBehaviour
         //MakeTileInaccessible(4, 5, 0);
         //RevertTile(4, 5);
     }
+
+
 
     public void MakeSurroundingTilesAccessible(Vector2Int Pos)
     {
