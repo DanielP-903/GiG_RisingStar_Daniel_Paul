@@ -50,20 +50,22 @@ public class Forager : Character
                 }
             }
 
-            if (tile != null && tile.Type == "rock" && headedBackToBase == false)
-            {
-                EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile);
-                List<EnvironmentTile> route = mMap.Solve(this.CurrentPosition, tile2, "forager");
-                GoTo(route);
-                CurrentTarget = tile;
-            }
-            else if (capacity >= maxCapacity && headedBackToBase == false)
+
+            
+            if (capacity >= maxCapacity && headedBackToBase == false)
             {
                 EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(baseTile);
                 List<EnvironmentTile> route = mMap.Solve(this.CurrentPosition, tile2, "forager");
                 GoTo(route);
                 CurrentTarget = baseTile;
                 headedBackToBase = true;
+            }
+            else if (tile != null && tile.Type == "rock" && headedBackToBase == false)
+            {
+                EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile);
+                List<EnvironmentTile> route = mMap.Solve(this.CurrentPosition, tile2, "forager");
+                GoTo(route);
+                CurrentTarget = tile;          
             }
         }
         else
@@ -97,7 +99,7 @@ public class Forager : Character
         }
         else if (CurrentTarget == baseTile)
         {
-            if (CheckAround(baseTile, mMap))
+            if (CheckAround(CurrentTarget, mMap))
             {
                 CurrentTarget = null;
                 theGame.GetComponent<Game>().cash += capacity * 100;

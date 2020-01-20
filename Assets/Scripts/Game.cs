@@ -22,8 +22,8 @@ public class Game : MonoBehaviour
     [SerializeField] private Forager forager;
     [SerializeField] private Warrior warrior;
 
-    private List<Forager> foragerList = new List<Forager>();
-    private List<Warrior> warriorList = new List<Warrior>();
+    public List<Forager> foragerList = new List<Forager>();
+    public List<Warrior> warriorList = new List<Warrior>();
     //[SerializeField] private Forager[] foragers = new Forager[2];
     //[SerializeField] private Warrior[] warriors = new Warrior[1];
     //private Forager[] mForagers = new Forager[2];
@@ -84,6 +84,7 @@ public class Game : MonoBehaviour
             newForager.tag = "Player";
             newForager.MyType = Character.CharacterType.Forager;
             newForager.CurrentTarget = null;
+            newForager.OwnedBy = Character.Ownership.Player;
             foragerList.Add(newForager);
             //Debug.Log("Spawned forager");
             unitCount++;
@@ -104,6 +105,7 @@ public class Game : MonoBehaviour
             newWarrior.tag = "Player";
             newWarrior.MyType = Character.CharacterType.Warrior;
             newWarrior.CurrentTarget = null;
+            newWarrior.OwnedBy = Character.Ownership.Player;
             warriorList.Add(newWarrior);
             Debug.Log("Spawned warrior");
             unitCount++;
