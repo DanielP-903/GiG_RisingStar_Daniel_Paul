@@ -7,6 +7,9 @@ public class Warrior : Character
     private GameObject theGame;
     private Environment mMap;
     private EnvironmentTile baseTile;
+
+    private GameObject AttackTarget = null;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -18,6 +21,14 @@ public class Warrior : Character
     // Update is called once per frame
     void Update()
     {
+        if (this.OwnedBy == Ownership.Enemy)
+        {
+            baseTile = theGame.GetComponentInChildren<Environment>().baseTile;
+        }
+        else
+        {
+            baseTile = theGame.GetComponentInChildren<Environment>().enemyBaseTile;
+        }
         DoWarrior();
     }
 
@@ -73,6 +84,32 @@ public class Warrior : Character
 
     public void Attack()
     {
-        Debug.Log("attacking...");
+
+        if (AttackTarget != null)
+        {
+            Debug.Log("attacking...");
+            if (CheckAround(AttackTarget.GetComponent<Warrior>().CurrentPosition, mMap))
+            {
+                AttackTarget.GetComponent<Warrior>().Health = 0;
+
+                if (AttackTarget.GetComponent<Warrior>().Health <= 0)
+                {
+                    Destroy(AttackTarget.gameObject);
+                    AttackTarget = null;
+                }
+            }
+        }
+        else if (CheckAround(baseTile, mMap) && AttackTarget == null)
+        {
+            Debug.Log("attacking...");
+            if (this.OwnedBy == Ownership.Enemy)
+            {
+                theGame.GetComponent<Game>().AttackPlayerBase();
+            }
+            else
+            {
+                theGame.GetComponent<Game>().AttackEnemyBase();
+            }
+        }
     }
 }

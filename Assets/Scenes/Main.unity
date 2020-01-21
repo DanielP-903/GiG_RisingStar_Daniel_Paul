@@ -920,17 +920,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85bf7546c1981c340b60aa6f224518ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingCash: 500
+  startingCash: 300
+  enemyStartingCash: 500
   foragerCost: 100
   warriorCost: 200
   cash: 0
+  enemyCash: 0
   MainCamera: {fileID: 963194227}
   OverviewCamera: {fileID: 1573201873}
   forager: {fileID: 4686278702115637381, guid: a0a5cd3148b785c469d30bd694a8c129, type: 3}
   warrior: {fileID: -4186123555350143438, guid: e7727a660b2e82040b8492ad70f15bc6,
     type: 3}
+  foragerList: []
+  warriorList: []
+  EnemyForagerList: []
+  EnemyWarriorList: []
   maxUnits: 10
   unitCount: 0
+  enemyUnitCount: 0
   Menu: {fileID: 2099476870}
   Hud: {fileID: 1579498796}
   CharacterStart: {fileID: 561634765}
@@ -938,10 +945,13 @@ MonoBehaviour:
   resStone: 0
   plrBaseHealth: 100
   enmBaseHealth: 100
+  mMap: {fileID: 0}
   characterSelection: 0
   selectionType: 0
   texMaterial: {fileID: 2100000, guid: c4e472abef2548a4abdf9bbf325d0a3e, type: 2}
   isGameStarted: 0
+  baseTile: {fileID: 0}
+  enemyBaseTile: {fileID: 0}
 --- !u!4 &896303072
 Transform:
   m_ObjectHideFlags: 0
@@ -1825,6 +1835,8 @@ MonoBehaviour:
   Size: {x: 17, y: 17}
   AccessiblePercentage: 0.85
   mAll: []
+  baseTile: {fileID: 0}
+  enemyBaseTile: {fileID: 0}
   finalPosition: {x: 0, y: 0, z: 0}
 --- !u!4 &2083344931
 Transform:

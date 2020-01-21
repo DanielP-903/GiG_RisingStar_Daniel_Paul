@@ -15,8 +15,6 @@ public class Character : MonoBehaviour
     private const float TileSize = 10.0f;
     private const float TileHeight = 2.5f;
 
-
-
     public enum CharacterType
     {
         Forager,

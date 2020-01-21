@@ -20,6 +20,7 @@ public class Environment : MonoBehaviour
     private List<EnvironmentTile> mLastSolution;
 
     public EnvironmentTile baseTile;
+    public EnvironmentTile enemyBaseTile;
 
     private readonly Vector3 NodeSize = Vector3.one * 9.0f; 
     private const float TileSize = 10.0f;
@@ -116,6 +117,7 @@ public class Environment : MonoBehaviour
         MakeTileInaccessible(1, 1, 5);
         baseTile = mMap[1][1];
         MakeTileInaccessible(Size.x - 2, Size.y - 2, 6);
+        enemyBaseTile = mMap[Size.x - 2][Size.y - 2];
 
         float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
 

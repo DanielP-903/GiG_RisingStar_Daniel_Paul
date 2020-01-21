@@ -11,10 +11,12 @@ public class Game : MonoBehaviour
     public static Game game;
 
     [SerializeField] private int startingCash = 500;
+    [SerializeField] private int enemyStartingCash = 500;
     [SerializeField] private int foragerCost = 100;
     [SerializeField] private int warriorCost = 200;
 
     public int cash = 0;
+    public int enemyCash = 0;
 
     [SerializeField] private Camera MainCamera;
     [SerializeField] private Camera OverviewCamera;
@@ -24,6 +26,8 @@ public class Game : MonoBehaviour
 
     public List<Forager> foragerList = new List<Forager>();
     public List<Warrior> warriorList = new List<Warrior>();
+    public List<Forager> EnemyForagerList = new List<Forager>();
+    public List<Warrior> EnemyWarriorList = new List<Warrior>();
     //[SerializeField] private Forager[] foragers = new Forager[2];
     //[SerializeField] private Warrior[] warriors = new Warrior[1];
     //private Forager[] mForagers = new Forager[2];
@@ -31,6 +35,7 @@ public class Game : MonoBehaviour
 
     [SerializeField] public int maxUnits = 10;
     public int unitCount = 0;
+    public int enemyUnitCount = 0;
 
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
@@ -54,6 +59,7 @@ public class Game : MonoBehaviour
     public bool isGameStarted;
 
     public EnvironmentTile baseTile;
+    public EnvironmentTile enemyBaseTile;
 
     private readonly int NumberOfRaycastHits = 10;
 
@@ -63,11 +69,13 @@ public class Game : MonoBehaviour
 
         mMap = GetComponentInChildren<Environment>();
         baseTile = GetComponentInChildren<Environment>().baseTile;
+        enemyBaseTile = GetComponentInChildren<Environment>().enemyBaseTile;
 
 
         characterSelection = -1;
 
         cash = startingCash;
+        enemyCash = enemyStartingCash;
 
         ShowMenu(true);
     }
@@ -114,6 +122,26 @@ public class Game : MonoBehaviour
         else { Debug.Log("Failed to spawn warrior"); }
     }
 
+    private void EnemyGenerator()
+    {
+        if (enemyUnitCount < maxUnits && enemyCash - foragerCost >= 0)
+        {
+            Forager newForager;
+            newForager = Instantiate(forager, transform);
+            newForager.transform.position = new Vector3(-75, 2.5f, -75);
+            newForager.transform.rotation = Quaternion.identity;
+            newForager.CurrentPosition = mMap.mMap[mMap.Size.x - 1][mMap.Size.y - 1];
+            newForager.tag = "Enemy";
+            newForager.MyType = Character.CharacterType.Forager;
+            newForager.CurrentTarget = null;
+            newForager.OwnedBy = Character.Ownership.Enemy;
+            EnemyForagerList.Add(newForager);
+            enemyUnitCount++;
+            enemyCash -= foragerCost;
+        }
+        else { Debug.Log("Failed to spawn enemy"); }
+    }
+
     public Vector2Int FindIndex(EnvironmentTile tile)
     {
         Vector2Int rVal = new Vector2Int(-1, -1);
@@ -132,7 +160,7 @@ public class Game : MonoBehaviour
         return rVal;
     }
 
-    private void AttackPlayerBase()
+    public void AttackPlayerBase()
     {
         plrBaseHealth -= 0.5f;
 
@@ -145,7 +173,7 @@ public class Game : MonoBehaviour
         }
     }
 
-    private void AttackEnemyBase()
+    public void AttackEnemyBase()
     {
         enmBaseHealth -= 0.5f;
 
@@ -477,6 +505,11 @@ public class Game : MonoBehaviour
         {
             UpdateGame();
 
+            if (enemyUnitCount < 1)
+            {
+                EnemyGenerator();
+            }
+
             if (characterSelection != -1)
             {
                 if (selectionType == Character.CharacterType.Forager)
@@ -510,6 +543,18 @@ public class Game : MonoBehaviour
                 }
 
                 foreach (var w in warriorList)
+                {
+                    w.transform.position = CharacterStart.position;
+                    w.transform.rotation = CharacterStart.rotation;
+                }
+
+                foreach (var f in EnemyForagerList)
+                {
+                    f.transform.position = CharacterStart.position;
+                    f.transform.rotation = CharacterStart.rotation;
+                }
+
+                foreach (var w in EnemyWarriorList)
                 {
                     w.transform.position = CharacterStart.position;
                     w.transform.rotation = CharacterStart.rotation;
@@ -551,12 +596,15 @@ public class Game : MonoBehaviour
                     positionInc += 10;
                 }
 
+
                 isGameStarted = true;
 
                 MainCamera.enabled = false;
                 OverviewCamera.enabled = true;
 
                 currentCam = OverviewCamera;
+
+
             }
         }
     }
@@ -564,6 +612,7 @@ public class Game : MonoBehaviour
     public void Generate()
     {
         mMap.GenerateWorld();
+
     }
 
     public void Exit()

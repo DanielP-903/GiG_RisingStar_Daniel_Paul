@@ -24,6 +24,14 @@ public class Forager : Character
     // Update is called once per frame
     void Update()
     {
+        if (this.OwnedBy == Ownership.Enemy)
+        {
+            baseTile = theGame.GetComponentInChildren<Environment>().enemyBaseTile;
+        }
+        else
+        {
+            baseTile = theGame.GetComponentInChildren<Environment>().baseTile;
+        }
         DoForager();
     }
 
