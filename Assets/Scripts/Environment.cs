@@ -31,6 +31,8 @@ public class Environment : MonoBehaviour
     public EnvironmentTile Start { get; private set; }
     public Vector3 finalPosition;
 
+    private bool initial = false;
+
     private void Awake()
     {
         mAll = new List<EnvironmentTile>();
@@ -80,6 +82,31 @@ public class Environment : MonoBehaviour
         }
     }
 
+    private float CheckPercentage()
+    {
+        float accessible = 0, nonAccessible = 0, gridSize = 0;
+
+        for (int x = 0; x < Size.x; ++x)
+        {  
+            for (int y = 0; y < Size.y; ++y)
+            {
+                if (mMap[x][y].IsAccessible == true)
+                {
+                    accessible++;
+                }
+                else
+                {
+                    nonAccessible++;
+                }
+            }
+        }
+
+        gridSize = Size.x * Size.y;
+
+        return (nonAccessible*100 / gridSize);
+
+    }
+
     private void Generate()
     {
         // Setup the map of the environment tiles according to the specified width and height
@@ -114,25 +141,31 @@ public class Environment : MonoBehaviour
             position.x += TileSize;
             position.z = -(halfHeight * TileSize);
         }
+
         MakeTileInaccessible(1, 1, 5);
         baseTile = mMap[1][1];
         MakeTileInaccessible(Size.x - 2, Size.y - 2, 6);
         enemyBaseTile = mMap[Size.x - 2][Size.y - 2];
 
-        float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
-
-        for (int i = 0; i < Size.x; i++)
+        while (CheckPercentage() < 20  || initial == false)
         {
-            for (int j = 0; j < Size.y; j++)
+            float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
+
+            for (int i = 0; i < Size.x; i++)
             {
-                if (result[i, j] < 20 && i != 0 && j != 0)
+                for (int j = 0; j < Size.y; j++)
                 {
-                    if (mMap[i][j].IsAccessible == true && Random.Range(0,100) > 50)
+                    if (result[i, j] < 20 && i != 0 && j != 0)
                     {
-                        MakeTileInaccessible(i, j, 0);
+                        if (mMap[i][j].IsAccessible == true && Random.Range(0, 100) > 50)
+                        {
+                            MakeTileInaccessible(i, j, 0);
+                        }
                     }
                 }
             }
+
+            initial = true;
         }
 
         int randomNumber = Random.Range(0, 100); // Get random number
@@ -195,7 +228,11 @@ public class Environment : MonoBehaviour
         else
         {
             riverStartTile = Random.Range(2, Size.y - 1);
-            riverEndTile = Random.Range(riverStartTile + 3, Size.y - 1);
+            while (riverEndTile > mMap.Length)
+            {
+                riverEndTile = Random.Range(riverStartTile + 3, Size.y - 1);
+            }
+
             for (int i = (int)Random.Range(0, riverStartTile - 1); i < riverEndTile; i++)
             {
                 if (mMap[(int) riverStartTile][i].IsAccessible == true)
@@ -241,10 +278,14 @@ public class Environment : MonoBehaviour
 
         switch (type)
         {
-            case 0: t.Type = "rock"; break;
-            case 1: t.Type = "stone"; break;
-            case 2: t.Type = "tree"; break;
-            case 3: t.Type = "logs"; break;
+            case 0: t.Type = "rock";
+                t.Health = 100; break;
+            case 1: t.Type = "stone";
+                t.Health = 100; break;
+            case 2: t.Type = "tree";
+                t.Health = 100; break;
+            case 3: t.Type = "logs";
+                t.Health = 100; break;
             case 4: t.Type = "water"; break;
             case 5: t.Type = "player base"; break;
             case 6: t.Type = "enemy base"; break;

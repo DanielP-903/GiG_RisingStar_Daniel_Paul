@@ -128,7 +128,7 @@ public class Game : MonoBehaviour
         {
             Forager newForager;
             newForager = Instantiate(forager, transform);
-            newForager.transform.position = new Vector3(-75, 2.5f, -75);
+            newForager.transform.position = new Vector3(75, 2.5f, 75);
             newForager.transform.rotation = Quaternion.identity;
             newForager.CurrentPosition = mMap.mMap[mMap.Size.x - 1][mMap.Size.y - 1];
             newForager.tag = "Enemy";
@@ -596,6 +596,27 @@ public class Game : MonoBehaviour
                     positionInc += 10;
                 }
 
+                index = 1;
+                positionInc = -75.0f;
+                foreach (var f in EnemyForagerList)
+                {
+                    f.transform.position = new Vector3(positionInc, 2.5f, 75);
+                    f.transform.rotation = Quaternion.identity;
+                    f.CurrentPosition = mMap.mMap[mMap.Size.x - index][mMap.Size.y];
+                    index++;
+                    positionInc -= 10;
+                }
+
+                index = 1;
+                positionInc = 75.0f;
+                foreach (var w in EnemyWarriorList)
+                {
+                    w.transform.position = new Vector3(positionInc, 2.5f, 75);
+                    w.transform.rotation = Quaternion.identity;
+                    w.CurrentPosition = mMap.mMap[mMap.Size.x - index][mMap.Size.y];
+                    index++;
+                    positionInc -= 10;
+                }
 
                 isGameStarted = true;
 
@@ -603,8 +624,6 @@ public class Game : MonoBehaviour
                 OverviewCamera.enabled = true;
 
                 currentCam = OverviewCamera;
-
-
             }
         }
     }

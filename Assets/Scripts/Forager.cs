@@ -41,7 +41,7 @@ public class Forager : Character
         {
             EnvironmentTile tile = null;
             float shortestLength = float.MaxValue;
-            float temp;
+            float temp = 0;
             for (int i = 0; i < mMap.Size.x; i++)
             {
                 for (int j = 0; j < mMap.Size.y; j++)
@@ -95,14 +95,19 @@ public class Forager : Character
 
                 Vector3 tilePosition = mMap.mMap[pos.x][pos.y].transform.position;
 
-                CurrentTarget.Health = 0;
-
-                if (CurrentTarget.Health <= 0)
+                if (Time.deltaTime >= 0)
                 {
-                    mMap.RevertTile(pos.x, pos.y);
-                    CurrentTarget = null;
-                    capacity++;
+                    CurrentTarget.Health -= 0.5f;
+                    Debug.Log(CurrentTarget.Health);
+                    if (CurrentTarget.Health <= 0)
+                    {
+                        mMap.RevertTile(pos.x, pos.y);
+                        CurrentTarget = null;
+                        capacity++;
+                    }
                 }
+
+                
             }
         }
         else if (CurrentTarget == baseTile)
