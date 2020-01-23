@@ -166,6 +166,11 @@ public class Environment : MonoBehaviour
             }
 
             initial = true;
+
+            if (CheckPercentage() > 50)
+            {
+                initial = false;
+            }
         }
 
         int randomNumber = Random.Range(0, 100); // Get random number
@@ -296,6 +301,10 @@ public class Environment : MonoBehaviour
         {
             mAll[mAll.FindIndex(ind => ind.Equals(mMap[x][y]))] = t;
         }
+        else
+        {
+            Debug.Log("O no");
+        }
 
         mMap[x][y] = t;
     }
@@ -377,7 +386,7 @@ public class Environment : MonoBehaviour
     {
         // Use the locations of the node to estimate how close they are by line of sight
         // experiment here with better ways of estimating the distance. This is used  to
-        // calculate the global goal and work out the best order to prossess nodes in
+        // calculate the global goal and work out the best order to process nodes in
         return Vector3.Distance(a.Position, b.Position);
     }
 
@@ -398,6 +407,10 @@ public class Environment : MonoBehaviour
                     Destroy(mMap[x][y].gameObject);
                 }
             }
+
+            mAll.Clear();
+            mLastSolution.Clear();
+            mToBeTested.Clear();
         }
     }
 
@@ -490,6 +503,7 @@ public class Environment : MonoBehaviour
                 else
                 {
                     Debug.LogWarning("Path Not Found: " + plrEnm);
+                    return null;
                 }
             }
             else
@@ -503,6 +517,7 @@ public class Environment : MonoBehaviour
         else
         {
             Debug.LogWarning("Cannot find path for invalid nodes: " + plrEnm);
+            return null;
         }
 
         mLastSolution = result;

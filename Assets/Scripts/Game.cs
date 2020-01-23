@@ -23,6 +23,8 @@ public class Game : MonoBehaviour
 
     [SerializeField] private Forager forager;
     [SerializeField] private Warrior warrior;
+    [SerializeField] private Forager enemyForager;
+    [SerializeField] private Warrior enemyWarrior;
 
     public List<Forager> foragerList = new List<Forager>();
     public List<Warrior> warriorList = new List<Warrior>();
@@ -127,7 +129,7 @@ public class Game : MonoBehaviour
         if (enemyUnitCount < maxUnits && enemyCash - foragerCost >= 0)
         {
             Forager newForager;
-            newForager = Instantiate(forager, transform);
+            newForager = Instantiate(enemyForager, transform);
             newForager.transform.position = new Vector3(75, 2.5f, 75);
             newForager.transform.rotation = Quaternion.identity;
             newForager.CurrentPosition = mMap.mMap[mMap.Size.x - 1][mMap.Size.y - 1];
@@ -167,6 +169,7 @@ public class Game : MonoBehaviour
         if (plrBaseHealth <= 0.0f)
         {
             Debug.Log("You lose! GAME OVER");
+            isGameStarted = false;
             Application.Quit();
             Exit();
             ShowMenu(true);
@@ -180,6 +183,7 @@ public class Game : MonoBehaviour
         if (enmBaseHealth <= 0.0f)
         {
             Debug.Log("You win! GAME OVER");
+            isGameStarted = false;
             Application.Quit();
             ShowMenu(true);
         }
@@ -219,19 +223,28 @@ public class Game : MonoBehaviour
         }
     }
 
-    public EnvironmentTile CheckAround(EnvironmentTile tile)
+    public EnvironmentTile CheckAround(EnvironmentTile tile, EnvironmentTile objective)
     {
-        if (tile != null)
+        EnvironmentTile temp = null;
+        float dist = float.MaxValue;
+        if (tile != null && objective != null)
         {
             foreach (EnvironmentTile e in tile.Connections)
             {
                 if (e.IsAccessible == true)
                 {
-                    return e;
+                    if (Vector3.Distance(objective.transform.position, e.transform.position) < dist)
+                    {
+                        if (mMap.Solve(objective, e, "forager") != null)
+                        {
+                            dist = Vector3.Distance(objective.transform.position, e.transform.position);
+                            temp = e;
+                        }
+                    }
                 }
             }
         }
-        return null;
+        return temp;
     }
 
     private void UpdateForagers()
@@ -260,7 +273,7 @@ public class Game : MonoBehaviour
                     }
                     else if (tile.Type == "rock")
                     {
-                        EnvironmentTile tile2 = CheckAround(tile);
+                        EnvironmentTile tile2 = CheckAround(tile, foragerList[characterSelection].CurrentPosition);
                         route = mMap.Solve(foragerList[characterSelection].CurrentPosition, tile2, "player");
                         foragerList[characterSelection].GoTo(route);
                         foragerList[characterSelection].CurrentTarget = tile;
@@ -333,7 +346,7 @@ public class Game : MonoBehaviour
                     }
                     else if (tile.Type == "enemy base")
                     {
-                        EnvironmentTile tile2 = CheckAround(tile);
+                        EnvironmentTile tile2 = CheckAround(tile, warriorList[characterSelection].CurrentPosition);
                         route = mMap.Solve(warriorList[characterSelection].CurrentPosition, tile2, "player");
                         warriorList[characterSelection].GoTo(route);
                         warriorList[characterSelection].CurrentTarget = tile;
@@ -538,27 +551,36 @@ public class Game : MonoBehaviour
 
                 foreach (var f in foragerList)
                 {
+                    Destroy(f.gameObject);
                     f.transform.position = CharacterStart.position;
                     f.transform.rotation = CharacterStart.rotation;
                 }
 
                 foreach (var w in warriorList)
                 {
+                    Destroy(w.gameObject);
                     w.transform.position = CharacterStart.position;
                     w.transform.rotation = CharacterStart.rotation;
                 }
 
                 foreach (var f in EnemyForagerList)
                 {
+                    Destroy(f.gameObject);
                     f.transform.position = CharacterStart.position;
                     f.transform.rotation = CharacterStart.rotation;
                 }
 
                 foreach (var w in EnemyWarriorList)
                 {
+                    Destroy(w.gameObject);
                     w.transform.position = CharacterStart.position;
                     w.transform.rotation = CharacterStart.rotation;
                 }
+
+                foragerList.Clear();
+                warriorList.Clear();
+                EnemyForagerList.Clear();
+                EnemyWarriorList.Clear();
 
 
                 mMap.CleanUpWorld();
@@ -573,8 +595,9 @@ public class Game : MonoBehaviour
             else
             {
                 cash = startingCash;
+                enemyCash = enemyStartingCash;
 
-                int index = 0;
+                /*int index = 0;
                 float positionInc = -75.0f;
                 foreach (var f in foragerList)
                 {
@@ -616,7 +639,10 @@ public class Game : MonoBehaviour
                     w.CurrentPosition = mMap.mMap[mMap.Size.x - index][mMap.Size.y];
                     index++;
                     positionInc -= 10;
-                }
+                }*/
+
+                unitCount = 0;
+                enemyUnitCount = 0;
 
                 isGameStarted = true;
 

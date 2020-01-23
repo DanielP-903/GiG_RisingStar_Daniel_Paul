@@ -931,6 +931,10 @@ MonoBehaviour:
   forager: {fileID: 4686278702115637381, guid: a0a5cd3148b785c469d30bd694a8c129, type: 3}
   warrior: {fileID: -4186123555350143438, guid: e7727a660b2e82040b8492ad70f15bc6,
     type: 3}
+  enemyForager: {fileID: 4686278702115637381, guid: b15a3aa9e5d77444ea568cdf18780ab4,
+    type: 3}
+  enemyWarrior: {fileID: -4186123555350143438, guid: e8be40f7c7c7ee243a9747d01d3dc07e,
+    type: 3}
   foragerList: []
   warriorList: []
   EnemyForagerList: []

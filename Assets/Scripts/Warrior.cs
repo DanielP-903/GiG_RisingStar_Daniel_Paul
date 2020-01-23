@@ -71,7 +71,7 @@ public class Warrior : Character
                 tile = baseTile;
             }
 
-            EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile);
+            EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
             List<EnvironmentTile> route = mMap.Solve(this.CurrentPosition, tile2, "warrior");
             GoTo(route);
             CurrentTarget = tile;
