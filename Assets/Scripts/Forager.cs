@@ -9,11 +9,12 @@ public class Forager : Character
     private GameObject theGame;
     private Environment mMap;
     private EnvironmentTile baseTile;
-
+    private int attempts = 0;
     private bool headedBackToBase = false;
     // Start is called before the first frame update
     void Start()
     {
+        Health = 100;
         theGame = GameObject.FindGameObjectWithTag("GameController");
         mMap = theGame.GetComponentInChildren<Environment>();
         baseTile = theGame.GetComponentInChildren<Environment>().baseTile;
@@ -67,25 +68,36 @@ public class Forager : Character
             if (capacity >= maxCapacity && headedBackToBase == false)
             {
                 List<EnvironmentTile> route = null;
-                while (route == null)
+                attempts = 0;
+                while (route == null && attempts < 30)
                 {
                     EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(baseTile, this.CurrentPosition);
                     route = mMap.Solve(this.CurrentPosition, tile2, "forager");
+                    attempts++;
                 }
-                GoTo(route);
-                CurrentTarget = baseTile;
-                headedBackToBase = true;
+
+                if (route != null)
+                {
+                    GoTo(route);
+                    CurrentTarget = baseTile;
+                    headedBackToBase = true;
+                }
             }
             else if (tile != null && tile.Type == "rock" && headedBackToBase == false)
             {
                 List<EnvironmentTile> route = null;
-                while (route == null)
+                attempts = 0;
+                while (route == null && attempts < 30)
                 {
                     EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
                     route = mMap.Solve(this.CurrentPosition, tile2, "forager");
                 }
-                GoTo(route);
-                CurrentTarget = tile;
+
+                if (route != null)
+                {
+                    GoTo(route);
+                    CurrentTarget = tile;
+                }
             }
         }
         else
@@ -100,7 +112,7 @@ public class Forager : Character
         {
             if (CheckAround(CurrentTarget, mMap))
             {
-                Debug.Log("Foraging...");
+                //Debug.Log("Foraging...");
                 float otherHealth = CurrentTarget.Health;
 
                 Vector2Int pos = FindIndex(CurrentTarget, mMap);

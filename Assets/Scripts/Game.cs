@@ -38,6 +38,7 @@ public class Game : MonoBehaviour
     [SerializeField] public int maxUnits = 10;
     public int unitCount = 0;
     public int enemyUnitCount = 0;
+    public float timer = 5.0f;
 
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
@@ -117,7 +118,7 @@ public class Game : MonoBehaviour
             newWarrior.CurrentTarget = null;
             newWarrior.OwnedBy = Character.Ownership.Player;
             warriorList.Add(newWarrior);
-            Debug.Log("Spawned warrior");
+            //Debug.Log("Spawned warrior");
             unitCount++;
             cash -= warriorCost;
         }
@@ -209,7 +210,7 @@ public class Game : MonoBehaviour
         {
             EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
 
-            Debug.Log(string.Format(tile.Type));
+            //Debug.Log(string.Format(tile.Type));
 
             Vector2Int index = FindIndex(tile);
             if (index.x != -1 && index.y != -1)
@@ -249,7 +250,7 @@ public class Game : MonoBehaviour
 
     private void UpdateForagers()
     {
-        Debug.Log(foragerList[characterSelection].CurrentTarget);
+        //Debug.Log(foragerList[characterSelection].CurrentTarget);
 
         // Check to see if the player has clicked a tile and if they have, try to find a path to that 
         // tile. If we find a path then the character will move along it to the clicked tile. 
@@ -322,7 +323,7 @@ public class Game : MonoBehaviour
     
     private void UpdateWarriors()
     {
-        Debug.Log(warriorList[characterSelection].CurrentTarget);
+        //Debug.Log(warriorList[characterSelection].CurrentTarget);
 
         // Check to see if the player has clicked a tile and if they have, try to find a path to that 
         // tile. If we find a path then the character will move along it to the clicked tile. 
@@ -520,6 +521,12 @@ public class Game : MonoBehaviour
 
             if (enemyUnitCount < 1)
             {
+                timer -= Time.deltaTime;
+            }
+
+            if (timer <= 0)
+            {
+                timer = 5;
                 EnemyGenerator();
             }
 
@@ -645,6 +652,8 @@ public class Game : MonoBehaviour
                 enemyUnitCount = 0;
 
                 isGameStarted = true;
+
+                timer = 5.0f;
 
                 MainCamera.enabled = false;
                 OverviewCamera.enabled = true;
