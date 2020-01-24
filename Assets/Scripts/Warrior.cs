@@ -41,7 +41,7 @@ public class Warrior : Character
         if (CurrentTarget == null)
         {
             EnvironmentTile tile = null;
-            float shortestLength = float.MaxValue;
+            float shortestLength = Vector3.Distance(this.transform.position, baseTile.transform.position);
             float temp;
             
             if (this.OwnedBy == Ownership.Player)

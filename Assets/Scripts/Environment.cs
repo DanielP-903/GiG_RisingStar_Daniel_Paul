@@ -132,6 +132,7 @@ public class Environment : MonoBehaviour
                 tile.IsAccessible = isAccessible;
                 tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
                 tile.Type = string.Format("ground");
+                tile.InUse = false;
                 mMap[x][y] = tile;
                 mAll.Add(tile);
                 if (start) { Start = tile; }

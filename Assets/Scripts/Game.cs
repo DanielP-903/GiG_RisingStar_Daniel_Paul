@@ -165,7 +165,7 @@ public class Game : MonoBehaviour
 
     public void AttackPlayerBase()
     {
-        plrBaseHealth -= 0.5f;
+        plrBaseHealth -= 0.2f;
 
         if (plrBaseHealth <= 0.0f)
         {
@@ -179,7 +179,7 @@ public class Game : MonoBehaviour
 
     public void AttackEnemyBase()
     {
-        enmBaseHealth -= 0.5f;
+        enmBaseHealth -= 0.2f;
 
         if (enmBaseHealth <= 0.0f)
         {

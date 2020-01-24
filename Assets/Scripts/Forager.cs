@@ -51,7 +51,7 @@ public class Forager : Character
             {
                 for (int j = 0; j < mMap.Size.y; j++)
                 {
-                    if (mMap.mMap[i][j].IsAccessible == false && mMap.mMap[i][j].Type == "rock")
+                    if (mMap.mMap[i][j].IsAccessible == false && mMap.mMap[i][j].Type == "rock" && mMap.mMap[i][j].InUse == false) 
                     {
                         temp = Vector3.Distance(this.transform.position, mMap.mMap[i][j].transform.position);
                         if (temp < shortestLength)
@@ -63,7 +63,10 @@ public class Forager : Character
                 }
             }
 
-
+            if (tile != null)
+            {
+                tile.InUse = true;
+            }
             
             if (capacity >= maxCapacity && headedBackToBase == false)
             {
@@ -126,6 +129,7 @@ public class Forager : Character
                     if (CurrentTarget.Health <= 0)
                     {
                         mMap.RevertTile(pos.x, pos.y);
+                        CurrentTarget.InUse = false;
                         CurrentTarget = null;
                         capacity++;
                     }

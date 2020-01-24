@@ -13,4 +13,5 @@ public class EnvironmentTile : MonoBehaviour
     public bool IsAccessible { get; set; }
     public string Type { get; set; }
     public float Health { get; set; }
+    public bool InUse { get; set; }
 }
