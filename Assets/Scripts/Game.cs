@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -10,10 +11,10 @@ public class Game : MonoBehaviour
 {
     public static Game game;
 
-    [SerializeField] private int startingCash = 500;
-    [SerializeField] private int enemyStartingCash = 500;
+    [SerializeField] private int startingCash = 100;
+    [SerializeField] private int enemyStartingCash = 100;
     [SerializeField] private int foragerCost = 100;
-    [SerializeField] private int warriorCost = 200;
+    [SerializeField] private int warriorCost = 300;
 
     public int cash = 0;
     public int enemyCash = 0;
@@ -39,6 +40,7 @@ public class Game : MonoBehaviour
     public int unitCount = 0;
     public int enemyUnitCount = 0;
     public float timer = 5.0f;
+    public float timer_Cash = 10.0f;
 
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
@@ -46,8 +48,8 @@ public class Game : MonoBehaviour
     [SerializeField] private Transform EnemyStart;
     [SerializeField] public int resStone;
 
-    [SerializeField] private float plrBaseHealth = 100.0f;
-    [SerializeField] private float enmBaseHealth = 100.0f;
+    [SerializeField] public float plrBaseHealth = 100.0f;
+    [SerializeField] public float enmBaseHealth = 100.0f;
 
     private RaycastHit[] mRaycastHits;
     public Environment mMap;
@@ -125,24 +127,52 @@ public class Game : MonoBehaviour
         else { Debug.Log("Failed to spawn warrior"); }
     }
 
-    private void EnemyGenerator()
+    private void EnemyGenerator(Character.CharacterType type)
     {
-        if (enemyUnitCount < maxUnits && enemyCash - foragerCost >= 0)
+        if (type == Character.CharacterType.Forager)
         {
-            Forager newForager;
-            newForager = Instantiate(enemyForager, transform);
-            newForager.transform.position = new Vector3(75, 2.5f, 75);
-            newForager.transform.rotation = Quaternion.identity;
-            newForager.CurrentPosition = mMap.mMap[mMap.Size.x - 1][mMap.Size.y - 1];
-            newForager.tag = "Enemy";
-            newForager.MyType = Character.CharacterType.Forager;
-            newForager.CurrentTarget = null;
-            newForager.OwnedBy = Character.Ownership.Enemy;
-            EnemyForagerList.Add(newForager);
-            enemyUnitCount++;
-            enemyCash -= foragerCost;
+            if (enemyUnitCount < maxUnits && enemyCash - foragerCost >= 0)
+            {
+                Forager newForager;
+                newForager = Instantiate(enemyForager, transform);
+                newForager.transform.position = new Vector3(75, 2.5f, 75);
+                newForager.transform.rotation = Quaternion.identity;
+                newForager.CurrentPosition = mMap.mMap[mMap.Size.x - 1][mMap.Size.y - 1];
+                newForager.tag = "Enemy";
+                newForager.MyType = Character.CharacterType.Forager;
+                newForager.CurrentTarget = null;
+                newForager.OwnedBy = Character.Ownership.Enemy;
+                EnemyForagerList.Add(newForager);
+                enemyUnitCount++;
+                enemyCash -= foragerCost;
+            }
+            else
+            {
+                Debug.Log("Failed to spawn enemy");
+            }
         }
-        else { Debug.Log("Failed to spawn enemy"); }
+        else if (type == Character.CharacterType.Warrior)
+        {
+            if (enemyUnitCount < maxUnits && enemyCash - warriorCost >= 0)
+            {
+                Warrior newWarrior;
+                newWarrior = Instantiate(enemyWarrior, transform);
+                newWarrior.transform.position = new Vector3(75, 2.5f, 75);
+                newWarrior.transform.rotation = Quaternion.identity;
+                newWarrior.CurrentPosition = mMap.mMap[mMap.Size.x - 1][mMap.Size.y - 1];
+                newWarrior.tag = "Enemy";
+                newWarrior.MyType = Character.CharacterType.Warrior;
+                newWarrior.CurrentTarget = null;
+                newWarrior.OwnedBy = Character.Ownership.Enemy;
+                EnemyWarriorList.Add(newWarrior);
+                enemyUnitCount++;
+                enemyCash -= warriorCost;
+            }
+            else
+            {
+                Debug.Log("Failed to spawn enemy warrior");
+            }
+        }
     }
 
     public Vector2Int FindIndex(EnvironmentTile tile)
@@ -227,21 +257,21 @@ public class Game : MonoBehaviour
     public EnvironmentTile CheckAround(EnvironmentTile tile, EnvironmentTile objective)
     {
         EnvironmentTile temp = null;
-        float dist = float.MaxValue;
+        int dist = int.MaxValue;
         if (tile != null && objective != null)
         {
             foreach (EnvironmentTile e in tile.Connections)
             {
                 if (e.IsAccessible == true)
                 {
-                    if (Vector3.Distance(objective.transform.position, e.transform.position) < dist)
+                    if (mMap.Solve(objective, e, "forager") != null)
                     {
-                        if (mMap.Solve(objective, e, "forager") != null)
+                        if (mMap.Solve(objective, e, "forager").Count < dist)
                         {
-                            dist = Vector3.Distance(objective.transform.position, e.transform.position);
+                            dist = mMap.Solve(objective, e, "forager").Count;
                             temp = e;
                         }
-                    }
+                    }                                       
                 }
             }
         }
@@ -392,9 +422,8 @@ public class Game : MonoBehaviour
 
     private void UpdateGame()
     {
-        Hud.transform.GetChild(1).GetComponent<Text>().text = "Base Health: " + plrBaseHealth;
-        Hud.transform.GetChild(2).GetComponent<Text>().text = "Enemy Base Health: " + enmBaseHealth;
-        Hud.transform.GetChild(3).GetComponent<Text>().text = "Cash: " + cash;
+        Hud.transform.GetChild(5).GetComponent<Text>().text = "Cash: " + cash;
+        Hud.transform.GetChild(6).GetComponent<Text>().text = "Units: " + unitCount + " / 10";
 
         bool check = false;
 
@@ -488,23 +517,75 @@ public class Game : MonoBehaviour
 
         if (currentCam == OverviewCamera)
         {
-            Vector3 addVec = currentCam.transform.position;
+            if (currentCam.transform.position.x < -250)
+            {
+                currentCam.transform.position = new Vector3(-250f, currentCam.transform.position.y, currentCam.transform.position.z);
+            }
+            if (currentCam.transform.position.x > -50)
+            {
+                currentCam.transform.position = new Vector3(-50f, currentCam.transform.position.y, currentCam.transform.position.z);
+            }
 
+            if (currentCam.transform.position.z > -50)
+            {
+                currentCam.transform.position = new Vector3(currentCam.transform.position.x, currentCam.transform.position.y, -50f);
+            }
+
+            if (currentCam.transform.position.z < -250)
+            {
+                currentCam.transform.position = new Vector3(currentCam.transform.position.x, currentCam.transform.position.y, -250f);
+            }
+            Vector3 addVec = currentCam.transform.position;
+            float zoom = 1.0f;
+
+            // Camera movement controls (WASD)
             if (Input.GetKey(KeyCode.A))
             {
-                addVec += (new Vector3(-1, 0, 1));
+                if ((currentCam.transform.position + (new Vector3(-1, 0, 1))).x > - 250)
+                {
+                    addVec += (new Vector3(-1, 0, 1));
+                }
             }
             else if (Input.GetKey(KeyCode.D))
             {
-                addVec += (new Vector3(1, 0, -1));
+                if ((currentCam.transform.position + (new Vector3(1, 0, -1))).x < -50)
+                {
+                    addVec += (new Vector3(1, 0, -1));
+                }
             } 
             if (Input.GetKey(KeyCode.W))
             {
-                addVec += (new Vector3(1.5f, 0, 1.5f));
+                if ((currentCam.transform.position + (new Vector3(1.5f, 0, 1.5f))).z < -50)
+                {
+                    addVec += (new Vector3(1.5f, 0, 1.5f));
+                }
             }
             else if (Input.GetKey(KeyCode.S))
             {
-                addVec += (new Vector3(-1.5f, 0, -1.5f));
+                if ((currentCam.transform.position + (new Vector3(-1.5f, 0, -1.5f))).z > -250)
+                {
+                    addVec += (new Vector3(-1.5f, 0, -1.5f));
+                }
+            }
+
+            
+
+            // Camera zoom in/out
+            if (Input.GetAxis("Mouse ScrollWheel") > 0)
+            {
+                if (currentCam.orthographicSize - zoom > 20)
+                {
+                    currentCam.orthographicSize -= zoom;
+                    OverviewCamera.orthographicSize -= zoom;
+                }
+            }
+            else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+            {
+                if (currentCam.orthographicSize + zoom < 80)
+                {
+                    currentCam.orthographicSize += zoom;
+                    OverviewCamera.orthographicSize += zoom;
+                }
             }
 
             currentCam.transform.position = addVec;
@@ -519,7 +600,14 @@ public class Game : MonoBehaviour
         {
             UpdateGame();
 
-            if (enemyUnitCount < 1)
+            timer_Cash -= Time.deltaTime;
+            if (timer_Cash < 0)
+            {
+                timer_Cash = 10.0f;
+                cash += 10;
+            }
+
+            if (enemyUnitCount < 2)
             {
                 timer -= Time.deltaTime;
             }
@@ -527,7 +615,14 @@ public class Game : MonoBehaviour
             if (timer <= 0)
             {
                 timer = 5;
-                EnemyGenerator();
+                if (enemyCash >= warriorCost)
+                {
+                    EnemyGenerator(Character.CharacterType.Warrior);
+                }
+                else if (enemyUnitCount == 0)
+                {
+                    EnemyGenerator(Character.CharacterType.Forager);
+                }
             }
 
             if (characterSelection != -1)
@@ -604,50 +699,6 @@ public class Game : MonoBehaviour
                 cash = startingCash;
                 enemyCash = enemyStartingCash;
 
-                /*int index = 0;
-                float positionInc = -75.0f;
-                foreach (var f in foragerList)
-                {
-                    f.transform.position = new Vector3(positionInc, 2.5f, -75);
-                    f.transform.rotation = Quaternion.identity;
-                    f.CurrentPosition = mMap.mMap[index][0];
-                    index++;
-                    positionInc += 10;
-                }
-
-                index = 0;
-                positionInc = -75.0f;
-                foreach (var w in warriorList)
-                {
-                    w.transform.position = new Vector3(positionInc, 2.5f, -75);
-                    w.transform.rotation = Quaternion.identity;
-                    w.CurrentPosition = mMap.mMap[index][0];
-                    index++;
-                    positionInc += 10;
-                }
-
-                index = 1;
-                positionInc = -75.0f;
-                foreach (var f in EnemyForagerList)
-                {
-                    f.transform.position = new Vector3(positionInc, 2.5f, 75);
-                    f.transform.rotation = Quaternion.identity;
-                    f.CurrentPosition = mMap.mMap[mMap.Size.x - index][mMap.Size.y];
-                    index++;
-                    positionInc -= 10;
-                }
-
-                index = 1;
-                positionInc = 75.0f;
-                foreach (var w in EnemyWarriorList)
-                {
-                    w.transform.position = new Vector3(positionInc, 2.5f, 75);
-                    w.transform.rotation = Quaternion.identity;
-                    w.CurrentPosition = mMap.mMap[mMap.Size.x - index][mMap.Size.y];
-                    index++;
-                    positionInc -= 10;
-                }*/
-
                 unitCount = 0;
                 enemyUnitCount = 0;
 
@@ -659,6 +710,8 @@ public class Game : MonoBehaviour
                 OverviewCamera.enabled = true;
 
                 currentCam = OverviewCamera;
+                enmBaseHealth = 100.0f;
+                plrBaseHealth = 100.0f;
             }
         }
     }

@@ -11,6 +11,7 @@ public class Forager : Character
     private EnvironmentTile baseTile;
     private int attempts = 0;
     private bool headedBackToBase = false;
+    private bool beingAttacked = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -42,6 +43,32 @@ public class Forager : Character
 
     public void DoForager()
     {
+        beingAttacked = false;
+        Vector3 oldT = transform.position;
+
+        if (OwnedBy == Ownership.Player)
+        {
+            foreach (Warrior warrior in theGame.GetComponent<Game>().EnemyWarriorList)
+            {
+                if (CheckAround(warrior.CurrentPosition, mMap))
+                {
+                    CurrentTarget = null;
+                    beingAttacked = true;
+                }
+            }
+        }
+        else if (OwnedBy == Ownership.Enemy)
+        {
+            foreach (Warrior warrior in theGame.GetComponent<Game>().warriorList)
+            {
+                if (CheckAround(warrior.CurrentPosition, mMap))
+                {
+                    CurrentTarget = null;
+                    beingAttacked = true;
+                }
+            }
+        }
+
         if (CurrentTarget == null)
         {
             EnvironmentTile tile = null;
@@ -63,11 +90,7 @@ public class Forager : Character
                 }
             }
 
-            if (tile != null)
-            {
-                tile.InUse = true;
-            }
-            
+
             if (capacity >= maxCapacity && headedBackToBase == false)
             {
                 List<EnvironmentTile> route = null;
@@ -94,18 +117,33 @@ public class Forager : Character
                 {
                     EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
                     route = mMap.Solve(this.CurrentPosition, tile2, "forager");
+                    attempts++;
+                    if (tile2 != null)
+                    {
+                        tile.InUse = true;
+                    }
                 }
+
 
                 if (route != null)
                 {
                     GoTo(route);
                     CurrentTarget = tile;
                 }
+                else
+                {
+                    Debug.Log("Eek");
+                }
             }
         }
         else
         {
             Forage();
+        }
+
+        if (beingAttacked == true)
+        {
+            transform.position = oldT;
         }
     }
 
@@ -115,7 +153,7 @@ public class Forager : Character
         {
             if (CheckAround(CurrentTarget, mMap))
             {
-                //Debug.Log("Foraging...");
+                Debug.Log("Foraging...");
                 float otherHealth = CurrentTarget.Health;
 
                 Vector2Int pos = FindIndex(CurrentTarget, mMap);
@@ -158,8 +196,11 @@ public class Forager : Character
         }
         else
         {
+            if (beingAttacked == false)
+            {
+                headedBackToBase = true;
+            }
             CurrentTarget = null;
-            headedBackToBase = true;
         }
 
     }

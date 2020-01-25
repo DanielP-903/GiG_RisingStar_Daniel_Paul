@@ -15,6 +15,8 @@ public class Character : MonoBehaviour
     private const float TileSize = 10.0f;
     private const float TileHeight = 2.5f;
 
+    private bool isMoving = false;
+
     public enum CharacterType
     {
         Forager,
@@ -70,17 +72,25 @@ public class Character : MonoBehaviour
 
     private IEnumerator DoGoTo(List<EnvironmentTile> route)
     {
-        // Move through each tile in the given route
-        if (route != null)
+        GameObject game = GameObject.FindWithTag("GameController");
+        if (game.GetComponent<Game>().isGameStarted)
         {
-            Vector3 position = CurrentPosition.Position;
-            for (int count = 0; count < route.Count; ++count)
+            // Move through each tile in the given route
+            if (route != null)
             {
-                Vector3 next = route[count].Position;
-                yield return DoMove(position, next);
-                CurrentPosition = route[count];
-                position = next;
+                //Vector3 position = CurrentPosition.Position;
+                Vector3 position = transform.position;
+                for (int count = 0; count < route.Count; ++count)
+                {
+                    isMoving = true;
+                    Vector3 next = route[count].Position;
+                    yield return DoMove(position, next);
+                    CurrentPosition = route[count];
+                    position = next;
+                }
             }
+
+            isMoving = false;
         }
     }
 

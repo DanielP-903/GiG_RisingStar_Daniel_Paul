@@ -12,6 +12,8 @@ public class Warrior : Character
     private Warrior AttackTarget_W = null;
     private Forager AttackTarget_F = null;
 
+    private bool beingAttacked = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -37,78 +39,155 @@ public class Warrior : Character
 
     public void DoWarrior()
     {
+        beingAttacked = false;
+
+        if (OwnedBy == Ownership.Player)
+        {
+            foreach (Warrior warrior in theGame.GetComponent<Game>().EnemyWarriorList)
+            {
+                if (CheckAround(warrior.CurrentPosition, mMap))
+                {
+                    //CurrentTarget = null;
+                    beingAttacked = true;
+                    Debug.Log("binch u lie");
+                }
+            }
+        }
+        else if (OwnedBy == Ownership.Enemy)
+        {
+            foreach (Warrior warrior in theGame.GetComponent<Game>().warriorList)
+            {
+                if (CheckAround(warrior.CurrentPosition, mMap))
+                {
+                    //CurrentTarget = null;
+                    beingAttacked = true;
+                    Debug.Log("binch u lie");
+                }
+            }
+        }
 
         if (CurrentTarget == null)
         {
             EnvironmentTile tile = null;
-            float shortestLength = Vector3.Distance(this.transform.position, baseTile.transform.position);
+            float shortestLength = float.MaxValue;// Vector3.Distance(this.transform.position, baseTile.transform.position);
             float temp;
             
             if (this.OwnedBy == Ownership.Player)
             {
-                foreach (Warrior warrior in theGame.GetComponent<Game>().EnemyWarriorList)
+                // Target warriors by default
+                if (theGame.GetComponent<Game>().EnemyWarriorList.Count == 0)
                 {
-                    temp = Vector3.Distance(this.transform.position, warrior.transform.position);
-                    if (temp < shortestLength)
+                    foreach (Forager forager in theGame.GetComponent<Game>().EnemyForagerList)
                     {
-                        shortestLength = temp;
-                        tile = warrior.CurrentPosition;
-                        AttackTarget_W = warrior;
+                        temp = Vector3.Distance(this.transform.position, forager.transform.position);
+                        if (temp < shortestLength)
+                        {
+                            shortestLength = temp;
+                            tile = forager.CurrentPosition;
+                            AttackTarget_F = forager;
+                        }
                     }
                 }
-                foreach (Forager forager in theGame.GetComponent<Game>().EnemyForagerList)
+                else
                 {
-                    temp = Vector3.Distance(this.transform.position, forager.transform.position);
-                    if (temp < shortestLength)
+                    foreach (Warrior warrior in theGame.GetComponent<Game>().EnemyWarriorList)
                     {
-                        shortestLength = temp;
-                        tile = forager.CurrentPosition;
-                        AttackTarget_F = forager;
+                        temp = Vector3.Distance(this.transform.position, warrior.transform.position);
+                        if (temp < shortestLength)
+                        {
+                            shortestLength = temp;
+                            tile = warrior.CurrentPosition;
+                            AttackTarget_W = warrior;
+                        }
                     }
                 }
             }
             else if (this.OwnedBy == Ownership.Enemy)
             {
-                foreach (Warrior warrior in theGame.GetComponent<Game>().warriorList)
+                if (theGame.GetComponent<Game>().warriorList.Count == 0)
                 {
-                    temp = Vector3.Distance(this.transform.position, warrior.transform.position);
-                    if (temp < shortestLength)
+                    foreach (Forager forager in theGame.GetComponent<Game>().foragerList)
                     {
-                        shortestLength = temp;
-                        tile = warrior.CurrentPosition;
-                        AttackTarget_W = warrior;
+                        temp = Vector3.Distance(this.transform.position, forager.transform.position);
+                        if (temp < shortestLength)
+                        {
+                            shortestLength = temp;
+                            tile = forager.CurrentPosition;
+                            AttackTarget_F = forager;
+                        }
                     }
                 }
-                foreach (Forager forager in theGame.GetComponent<Game>().foragerList)
+                else
                 {
-                    temp = Vector3.Distance(this.transform.position, forager.transform.position);
-                    if (temp < shortestLength)
+                    foreach (Warrior warrior in theGame.GetComponent<Game>().warriorList)
                     {
-                        shortestLength = temp;
-                        tile = forager.CurrentPosition;
-                        AttackTarget_F = forager;
+                        temp = Vector3.Distance(this.transform.position, warrior.transform.position);
+                        if (temp < shortestLength)
+                        {
+                            shortestLength = temp;
+                            tile = warrior.CurrentPosition;
+                            AttackTarget_W = warrior;
+                        }
                     }
                 }
             }
 
-            if (tile == null)
+            if (tile == null && AttackTarget_F == null && AttackTarget_W == null)
             {
                 tile = baseTile;
             }
 
-            EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
-            List<EnvironmentTile> route = mMap.Solve(this.CurrentPosition, tile2, "warrior");
-            GoTo(route);
-            CurrentTarget = tile;
+            List<EnvironmentTile> route = null;
 
+            if (beingAttacked == false)
+            {
+                EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
+                route = mMap.Solve(this.CurrentPosition, tile2, "warrior");
+            }
+
+            if (route != null)
+            {
+                GoTo(route);
+                CurrentTarget = tile;
+            }
+            else
+            {
+                CurrentTarget = null;
+            }
         }
         else
         {
             if (CheckAround(this.CurrentTarget, mMap) == true)
-            {
+            {       
                 CurrentTarget = null;
                 Attack();
             }
+
+            //if (beingAttacked == false)
+            //{
+            //    if (AttackTarget_F != null)
+            //    {
+            //        //if (this.CurrentTarget.transform.position.x > AttackTarget_F.transform.position.x - 5 &&
+            //        //    this.CurrentTarget.transform.position.x < AttackTarget_F.transform.position.x + 5 &&
+            //        //    this.CurrentTarget.transform.position.z > AttackTarget_F.transform.position.z - 5 &&
+            //        //    this.CurrentTarget.transform.position.z < AttackTarget_F.transform.position.z + 5)
+            //        //{
+            //            AttackTarget_F = null;
+            //            CurrentTarget = null;
+            //        //}
+            //    }
+            //    else if (AttackTarget_W != null)
+            //    {
+            //        //if (this.CurrentTarget.transform.position.x > AttackTarget_W.transform.position.x - 5 &&
+            //        //    this.CurrentTarget.transform.position.x < AttackTarget_W.transform.position.x + 5 &&
+            //        //    this.CurrentTarget.transform.position.z > AttackTarget_W.transform.position.z - 5 &&
+            //        //    this.CurrentTarget.transform.position.z < AttackTarget_W.transform.position.z + 5)
+            //        //{
+            //            AttackTarget_W = null;
+            //            CurrentTarget = null;
+            //        //}
+            //    }
+            //}
         }
     }
 
@@ -123,9 +202,18 @@ public class Warrior : Character
 
                 if (AttackTarget_F.GetComponent<Forager>().Health <= 0)
                 {
+                    beingAttacked = false;
                     Destroy(AttackTarget_F.gameObject);
-                    theGame.GetComponent<Game>().EnemyForagerList.Remove(AttackTarget_F.GetComponent<Forager>());
-                    theGame.GetComponent<Game>().enemyUnitCount--;
+                    if (OwnedBy == Ownership.Player)
+                    {
+                        theGame.GetComponent<Game>().EnemyForagerList.Remove(AttackTarget_F.GetComponent<Forager>());
+                        theGame.GetComponent<Game>().enemyUnitCount--;
+                    }
+                    else
+                    {
+                        theGame.GetComponent<Game>().foragerList.Remove(AttackTarget_F.GetComponent<Forager>());
+                        theGame.GetComponent<Game>().unitCount--;
+                    }
                     AttackTarget_F = null;
                 }
             }
@@ -139,9 +227,18 @@ public class Warrior : Character
 
                 if (AttackTarget_W.GetComponent<Warrior>().Health <= 0)
                 {
+                    beingAttacked = false;
                     Destroy(AttackTarget_W.gameObject);
-                    theGame.GetComponent<Game>().EnemyWarriorList.Remove(AttackTarget_W.GetComponent<Warrior>());
-                    theGame.GetComponent<Game>().enemyUnitCount--;
+                    if (OwnedBy == Ownership.Player)
+                    {
+                        theGame.GetComponent<Game>().EnemyWarriorList.Remove(AttackTarget_W.GetComponent<Warrior>());
+                        theGame.GetComponent<Game>().enemyUnitCount--;
+                    }
+                    else
+                    {
+                        theGame.GetComponent<Game>().warriorList.Remove(AttackTarget_W.GetComponent<Warrior>());
+                        theGame.GetComponent<Game>().unitCount--;
+                    }
                     AttackTarget_W = null;
                 }
             }

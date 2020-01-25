@@ -9,6 +9,7 @@ TagManager:
   - PlayerBase
   - EnemyBase
   - Enemy
+  - plrHealthBar
   layers:
   - Default
   - TransparentFX
