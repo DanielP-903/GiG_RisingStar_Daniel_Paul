@@ -12,6 +12,10 @@ public class Forager : Character
     private int attempts = 0;
     private bool headedBackToBase = false;
     private bool beingAttacked = false;
+    private List<EnvironmentTile> exclusions = new List<EnvironmentTile>();
+    private EnvironmentTile tile = null;
+    private List<EnvironmentTile> route = null;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -41,89 +45,83 @@ public class Forager : Character
         }
     }
 
-    public void DoForager()
+    private void CheckIfAttacked(List<Warrior> warriors)
     {
         beingAttacked = false;
-        Vector3 oldT = transform.position;
 
-        if (OwnedBy == Ownership.Player)
+        foreach (Warrior warrior in warriors)
         {
-            foreach (Warrior warrior in theGame.GetComponent<Game>().EnemyWarriorList)
+            if (CheckAround(warrior.CurrentPosition, mMap))
             {
-                if (CheckAround(warrior.CurrentPosition, mMap))
+                CurrentTarget = null;
+                beingAttacked = true;
+            }
+        }
+    }
+
+    private void FindTile()
+    {
+        float shortestLength = float.MaxValue;
+        float temp = 0;
+        foreach (EnvironmentTile t in mMap.foragerTilesTBC)
+        {
+            if (t.InUse == false && exclusions.Contains(t) == false)
+            {
+                temp = Vector3.Distance(transform.position, t.transform.position);
+                if (temp < shortestLength)
                 {
-                    CurrentTarget = null;
-                    beingAttacked = true;
+                    shortestLength = temp;
+                    tile = t;
                 }
             }
         }
-        else if (OwnedBy == Ownership.Enemy)
-        {
-            foreach (Warrior warrior in theGame.GetComponent<Game>().warriorList)
-            {
-                if (CheckAround(warrior.CurrentPosition, mMap))
-                {
-                    CurrentTarget = null;
-                    beingAttacked = true;
-                }
-            }
-        }
+    }
+
+    public void DoForager()
+    {
+        Vector3 oldT = transform.position;
+        route = null;
+
+        if (OwnedBy == Ownership.Player) { CheckIfAttacked(theGame.GetComponent<Game>().EnemyWarriorList); }
+        else if (OwnedBy == Ownership.Enemy) { CheckIfAttacked(theGame.GetComponent<Game>().warriorList); }
 
         if (CurrentTarget == null)
         {
-            EnvironmentTile tile = null;
-            float shortestLength = float.MaxValue;
-            float temp = 0;
-            for (int i = 0; i < mMap.Size.x; i++)
+            FindTile();
+
+            if (capacity >= maxCapacity && headedBackToBase == false && beingAttacked == false)
             {
-                for (int j = 0; j < mMap.Size.y; j++)
+                EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(baseTile, this.CurrentPosition);
+                if (tile2 != null)
                 {
-                    if (mMap.mMap[i][j].IsAccessible == false && mMap.mMap[i][j].Type == "rock" && mMap.mMap[i][j].InUse == false) 
+                    route = mMap.Solve(this.CurrentPosition, tile2, "forager");
+                    if (route != null)
                     {
-                        temp = Vector3.Distance(this.transform.position, mMap.mMap[i][j].transform.position);
-                        if (temp < shortestLength)
-                        {
-                            shortestLength = temp;
-                            tile = mMap.mMap[i][j];
-                        }
+                        GoTo(route);
+                        CurrentTarget = baseTile;
+                        headedBackToBase = true;
                     }
                 }
             }
-
-
-            if (capacity >= maxCapacity && headedBackToBase == false)
+            else if (tile != null && headedBackToBase == false && beingAttacked == false)
             {
-                List<EnvironmentTile> route = null;
-                attempts = 0;
-                while (route == null && attempts < 30)
-                {
-                    EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(baseTile, this.CurrentPosition);
-                    route = mMap.Solve(this.CurrentPosition, tile2, "forager");
-                    attempts++;
-                }
-
-                if (route != null)
-                {
-                    GoTo(route);
-                    CurrentTarget = baseTile;
-                    headedBackToBase = true;
-                }
-            }
-            else if (tile != null && tile.Type == "rock" && headedBackToBase == false)
-            {
-                List<EnvironmentTile> route = null;
-                attempts = 0;
-                while (route == null && attempts < 30)
+                bool check = false;
+                while (check == false)
                 {
                     EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
-                    route = mMap.Solve(this.CurrentPosition, tile2, "forager");
-                    attempts++;
                     if (tile2 != null)
                     {
+                        route = mMap.Solve(this.CurrentPosition, tile2, "forager");
                         tile.InUse = true;
+                        check = true;
+                    }
+                    else
+                    {
+                        exclusions.Add(tile);
+                        FindTile();
+                        check = false;
                     }
                 }
-
 
                 if (route != null)
                 {
@@ -132,18 +130,20 @@ public class Forager : Character
                 }
                 else
                 {
-                    Debug.Log("Eek");
+                    Debug.LogWarning("Eek");
                 }
             }
         }
         else
         {
-            Forage();
-        }
-
-        if (beingAttacked == true)
-        {
-            transform.position = oldT;
+            if (beingAttacked == false)
+            {
+                Forage();
+            }
+            else            
+            {
+                transform.position = oldT;
+            }
         }
     }
 
@@ -192,6 +192,7 @@ public class Forager : Character
 
                 capacity = 0;
                 headedBackToBase = false;
+                exclusions.Clear();
             }
         }
         else

@@ -12,12 +12,12 @@ public class Environment : MonoBehaviour
     [SerializeField] public List<EnvironmentTile> AccessibleTiles;
     [SerializeField] public List<EnvironmentTile> InaccessibleTiles;
     [SerializeField] public Vector2Int Size;
-    [SerializeField] private float AccessiblePercentage;
 
     public EnvironmentTile[][] mMap;
     public List<EnvironmentTile> mAll;
     private List<EnvironmentTile> mToBeTested;
     private List<EnvironmentTile> mLastSolution;
+    public List<EnvironmentTile> foragerTilesTBC;
 
     public EnvironmentTile baseTile;
     public EnvironmentTile enemyBaseTile;
@@ -192,11 +192,17 @@ public class Environment : MonoBehaviour
         BasePosition = new Vector2Int(Size.x - 2, Size.y - 2);
         MakeSurroundingTilesAccessible(BasePosition);
 
-        //MakeTileInaccessible(4, 5, 0);
-        //RevertTile(4, 5);
+        for (int i = 0; i < Size.x; i++)
+        {
+            for (int j = 0; j < Size.y; j++)
+            {
+                if (mMap[i][j].IsAccessible == false && mMap[i][j].Type == "rock")
+                {
+                    foragerTilesTBC.Add(mMap[i][j]);
+                }
+            }
+        }
     }
-
-
 
     public void MakeSurroundingTilesAccessible(Vector2Int Pos)
     {
@@ -307,6 +313,7 @@ public class Environment : MonoBehaviour
             Debug.Log("O no");
         }
 
+
         mMap[x][y] = t;
     }
 
@@ -334,6 +341,8 @@ public class Environment : MonoBehaviour
         {
             mAll[mAll.FindIndex(ind => ind.Equals(mMap[x][y]))] = t;
         }
+
+        foragerTilesTBC.Remove(t);
 
         mMap[x][y] = t;
     }
@@ -410,8 +419,9 @@ public class Environment : MonoBehaviour
             }
 
             mAll.Clear();
-            mLastSolution.Clear();
-            mToBeTested.Clear();
+            //mLastSolution.Clear();
+           // mToBeTested.Clear();
+            foragerTilesTBC.Clear();
         }
     }
 

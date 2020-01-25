@@ -13,6 +13,8 @@ public class Warrior : Character
     private Forager AttackTarget_F = null;
 
     private bool beingAttacked = false;
+    private Warrior attacker = null;
+    private EnvironmentTile tile = null;
 
     // Start is called before the first frame update
     void Start()
@@ -37,157 +39,127 @@ public class Warrior : Character
         DoWarrior();
     }
 
-    public void DoWarrior()
+    private void FindTarget(List<Warrior> warriors, List<Forager> foragers)
     {
-        beingAttacked = false;
-
-        if (OwnedBy == Ownership.Player)
+        float shortestLength = float.MaxValue;// Vector3.Distance(this.transform.position, baseTile.transform.position);
+        float temp;
+        AttackTarget_F = null;
+        AttackTarget_W = null;
+        // Target warriors by default
+        if (warriors.Count == 0)
         {
-            foreach (Warrior warrior in theGame.GetComponent<Game>().EnemyWarriorList)
+            foreach (Forager forager in foragers)
             {
-                if (CheckAround(warrior.CurrentPosition, mMap))
+                temp = Vector3.Distance(this.transform.position, forager.transform.position);
+                if (temp < shortestLength)
                 {
-                    //CurrentTarget = null;
-                    beingAttacked = true;
-                    Debug.Log("binch u lie");
+                    shortestLength = temp;
+                    tile = forager.CurrentPosition;
+                    AttackTarget_F = forager;
                 }
-            }
-        }
-        else if (OwnedBy == Ownership.Enemy)
-        {
-            foreach (Warrior warrior in theGame.GetComponent<Game>().warriorList)
-            {
-                if (CheckAround(warrior.CurrentPosition, mMap))
-                {
-                    //CurrentTarget = null;
-                    beingAttacked = true;
-                    Debug.Log("binch u lie");
-                }
-            }
-        }
-
-        if (CurrentTarget == null)
-        {
-            EnvironmentTile tile = null;
-            float shortestLength = float.MaxValue;// Vector3.Distance(this.transform.position, baseTile.transform.position);
-            float temp;
-            
-            if (this.OwnedBy == Ownership.Player)
-            {
-                // Target warriors by default
-                if (theGame.GetComponent<Game>().EnemyWarriorList.Count == 0)
-                {
-                    foreach (Forager forager in theGame.GetComponent<Game>().EnemyForagerList)
-                    {
-                        temp = Vector3.Distance(this.transform.position, forager.transform.position);
-                        if (temp < shortestLength)
-                        {
-                            shortestLength = temp;
-                            tile = forager.CurrentPosition;
-                            AttackTarget_F = forager;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (Warrior warrior in theGame.GetComponent<Game>().EnemyWarriorList)
-                    {
-                        temp = Vector3.Distance(this.transform.position, warrior.transform.position);
-                        if (temp < shortestLength)
-                        {
-                            shortestLength = temp;
-                            tile = warrior.CurrentPosition;
-                            AttackTarget_W = warrior;
-                        }
-                    }
-                }
-            }
-            else if (this.OwnedBy == Ownership.Enemy)
-            {
-                if (theGame.GetComponent<Game>().warriorList.Count == 0)
-                {
-                    foreach (Forager forager in theGame.GetComponent<Game>().foragerList)
-                    {
-                        temp = Vector3.Distance(this.transform.position, forager.transform.position);
-                        if (temp < shortestLength)
-                        {
-                            shortestLength = temp;
-                            tile = forager.CurrentPosition;
-                            AttackTarget_F = forager;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (Warrior warrior in theGame.GetComponent<Game>().warriorList)
-                    {
-                        temp = Vector3.Distance(this.transform.position, warrior.transform.position);
-                        if (temp < shortestLength)
-                        {
-                            shortestLength = temp;
-                            tile = warrior.CurrentPosition;
-                            AttackTarget_W = warrior;
-                        }
-                    }
-                }
-            }
-
-            if (tile == null && AttackTarget_F == null && AttackTarget_W == null)
-            {
-                tile = baseTile;
-            }
-
-            List<EnvironmentTile> route = null;
-
-            if (beingAttacked == false)
-            {
-                EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
-                route = mMap.Solve(this.CurrentPosition, tile2, "warrior");
-            }
-
-            if (route != null)
-            {
-                GoTo(route);
-                CurrentTarget = tile;
-            }
-            else
-            {
-                CurrentTarget = null;
             }
         }
         else
         {
+            foreach (Warrior warrior in warriors)
+            {
+                temp = Vector3.Distance(this.transform.position, warrior.transform.position);
+                if (temp < shortestLength)
+                {
+                    shortestLength = temp;
+                    tile = warrior.CurrentPosition;
+                    AttackTarget_W = warrior;
+                }
+            }
+        }
+
+        if (AttackTarget_F == null && AttackTarget_W == null)
+        {
+            List<EnvironmentTile> route = new List<EnvironmentTile>();
+            EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(baseTile, this.CurrentPosition);
+            if (tile2 != null)
+            {
+                route = mMap.Solve(this.CurrentPosition, tile2, "warrior");
+                if (route != null)
+                {
+                    GoTo(route);
+                    CurrentTarget = tile2;
+                }
+                else
+                {
+                    CurrentTarget = null;
+                }
+            }
+        }
+        else
+        {
+            CurrentTarget = tile;
+        }
+    }
+
+    private void CheckIfAttacked(List<Warrior> warriors)
+    {
+        beingAttacked = false;
+
+        foreach (Warrior warrior in warriors)
+        {
+            if (CheckAround(warrior.CurrentPosition, mMap))
+            {
+                beingAttacked = true;
+                attacker = warrior;
+                return;
+            }
+        }
+
+        //if (beingAttacked == false)
+        //{
+        //    CurrentTarget = null;
+        //}
+    }
+
+    public void DoWarrior()
+    {
+        // Check if I'm being attacked by something
+        if (OwnedBy == Ownership.Player) { CheckIfAttacked(theGame.GetComponent<Game>().EnemyWarriorList); }
+        else if (OwnedBy == Ownership.Enemy) { CheckIfAttacked(theGame.GetComponent<Game>().warriorList); }
+
+        if (CurrentTarget == null)
+        {
+            // Find something to attack
+            if (OwnedBy == Ownership.Player) { FindTarget(theGame.GetComponent<Game>().EnemyWarriorList, theGame.GetComponent<Game>().EnemyForagerList); }
+            else if (OwnedBy == Ownership.Enemy) { FindTarget(theGame.GetComponent<Game>().warriorList, theGame.GetComponent<Game>().foragerList); }
+
+            if (tile == null && AttackTarget_F == null && AttackTarget_W == null && beingAttacked == false)
+            {
+                tile = baseTile;
+            }
+            else if (beingAttacked == false)
+            {
+                List<EnvironmentTile> route = new List<EnvironmentTile>();
+                EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
+                if (tile2 != null)
+                {
+                    route = mMap.Solve(this.CurrentPosition, tile2, "warrior");
+                    if (route != null)
+                    {
+                        GoTo(route);
+                        CurrentTarget = tile;
+                    }
+                }
+            }
+            else
+            {
+                CurrentTarget = attacker.CurrentPosition;
+            }
+        }
+        else // I have a target
+        {
+            // If near target, attack
             if (CheckAround(this.CurrentTarget, mMap) == true)
             {       
                 CurrentTarget = null;
                 Attack();
             }
-
-            //if (beingAttacked == false)
-            //{
-            //    if (AttackTarget_F != null)
-            //    {
-            //        //if (this.CurrentTarget.transform.position.x > AttackTarget_F.transform.position.x - 5 &&
-            //        //    this.CurrentTarget.transform.position.x < AttackTarget_F.transform.position.x + 5 &&
-            //        //    this.CurrentTarget.transform.position.z > AttackTarget_F.transform.position.z - 5 &&
-            //        //    this.CurrentTarget.transform.position.z < AttackTarget_F.transform.position.z + 5)
-            //        //{
-            //            AttackTarget_F = null;
-            //            CurrentTarget = null;
-            //        //}
-            //    }
-            //    else if (AttackTarget_W != null)
-            //    {
-            //        //if (this.CurrentTarget.transform.position.x > AttackTarget_W.transform.position.x - 5 &&
-            //        //    this.CurrentTarget.transform.position.x < AttackTarget_W.transform.position.x + 5 &&
-            //        //    this.CurrentTarget.transform.position.z > AttackTarget_W.transform.position.z - 5 &&
-            //        //    this.CurrentTarget.transform.position.z < AttackTarget_W.transform.position.z + 5)
-            //        //{
-            //            AttackTarget_W = null;
-            //            CurrentTarget = null;
-            //        //}
-            //    }
-            //}
         }
     }
 
@@ -215,6 +187,7 @@ public class Warrior : Character
                         theGame.GetComponent<Game>().unitCount--;
                     }
                     AttackTarget_F = null;
+                    tile = null;
                 }
             }
         }
@@ -240,6 +213,7 @@ public class Warrior : Character
                         theGame.GetComponent<Game>().unitCount--;
                     }
                     AttackTarget_W = null;
+                    tile = null;
                 }
             }
         }

@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
+using Random = System.Random;
 
 public class Game : MonoBehaviour
 {
@@ -264,11 +265,12 @@ public class Game : MonoBehaviour
             {
                 if (e.IsAccessible == true)
                 {
-                    if (mMap.Solve(objective, e, "forager") != null)
+                    List<EnvironmentTile> route = mMap.Solve(objective, e, "Game");
+                    if (route != null)
                     {
-                        if (mMap.Solve(objective, e, "forager").Count < dist)
+                        if (route.Count < dist)
                         {
-                            dist = mMap.Solve(objective, e, "forager").Count;
+                            dist = route.Count;
                             temp = e;
                         }
                     }                                       
@@ -422,10 +424,10 @@ public class Game : MonoBehaviour
 
     private void UpdateGame()
     {
-        Hud.transform.GetChild(5).GetComponent<Text>().text = "Cash: " + cash;
-        Hud.transform.GetChild(6).GetComponent<Text>().text = "Units: " + unitCount + " / 10";
+        Hud.transform.GetChild(4).GetComponent<Text>().text = "Cash \n" + cash;
+        Hud.transform.GetChild(5).GetComponent<Text>().text = "Units \n" + unitCount + " / 10";
 
-        bool check = false;
+        /*bool check = false;
 
         if (Input.GetMouseButtonDown(0) && characterSelection == -1)
         {
@@ -513,7 +515,7 @@ public class Game : MonoBehaviour
             }
 
             characterSelection = -1;
-        }
+        }*/
 
         if (currentCam == OverviewCamera)
         {
@@ -607,7 +609,7 @@ public class Game : MonoBehaviour
                 cash += 10;
             }
 
-            if (enemyUnitCount < 2)
+            if (enemyUnitCount < 10)
             {
                 timer -= Time.deltaTime;
             }
@@ -615,29 +617,33 @@ public class Game : MonoBehaviour
             if (timer <= 0)
             {
                 timer = 5;
-                if (enemyCash >= warriorCost)
+                float random = UnityEngine.Random.Range(0, 1000);
+                if (random < 500)
                 {
                     EnemyGenerator(Character.CharacterType.Warrior);
                 }
-                else if (enemyUnitCount == 0)
+                else if (EnemyForagerList.Count < 4 && random >= 750)
+                {
+                    EnemyGenerator(Character.CharacterType.Forager);
+                } 
+                else if (EnemyForagerList.Count==0)
                 {
                     EnemyGenerator(Character.CharacterType.Forager);
                 }
             }
 
-            if (characterSelection != -1)
-            {
-                if (selectionType == Character.CharacterType.Forager)
-                {
-                    UpdateForagers();
-                }
-                else
-                {
-                    UpdateWarriors();
-                }
-                
-                CheckSelectedTile();
-            }
+            //if (characterSelection != -1)
+            //{
+            //    if (selectionType == Character.CharacterType.Forager)
+            //    {
+            //        UpdateForagers();
+            //    }
+            //    else
+            //    {
+            //        UpdateWarriors();
+            //    }
+            //    CheckSelectedTile();
+            //}
         }
     }
 
