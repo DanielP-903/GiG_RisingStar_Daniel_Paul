@@ -51,7 +51,7 @@ public class Forager : Character
 
         foreach (Warrior warrior in warriors)
         {
-            if (CheckAround(warrior.CurrentPosition, mMap))
+            if (CheckAround(warrior.CurrentPosition))
             {
                 CurrentTarget = null;
                 beingAttacked = true;
@@ -151,7 +151,7 @@ public class Forager : Character
     {
         if (CurrentTarget != null && capacity < maxCapacity && headedBackToBase == false)
         {
-            if (CheckAround(CurrentTarget, mMap))
+            if (CheckAround(CurrentTarget))
             {
                 float otherHealth = CurrentTarget.Health;
 
@@ -176,7 +176,7 @@ public class Forager : Character
         }
         else if (CurrentTarget == baseTile)
         {
-            if (CheckAround(CurrentTarget, mMap))
+            if (CheckAround(CurrentTarget))
             {
                 CurrentTarget = null;
                 if (this.OwnedBy == Ownership.Player)

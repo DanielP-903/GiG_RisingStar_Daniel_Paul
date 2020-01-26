@@ -1009,8 +1009,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 4.7019774e-38, y: 1.5777218e-30, z: 2.3509887e-38,
-    w: 2.87e-42}
+  m_BoundingSphereOverride: {x: 12, y: -13, z: 9, w: 2.5e-44}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
@@ -1200,8 +1199,7 @@ MonoBehaviour:
   enemyStartingCash: 100
   foragerCost: 100
   warriorCost: 300
-  cash: 0
-  enemyCash: 0
+  maxUnits: 10
   MainCamera: {fileID: 963194227}
   OverviewCamera: {fileID: 1573201873}
   forager: {fileID: 4686278702115637381, guid: a0a5cd3148b785c469d30bd694a8c129, type: 3}
@@ -1211,28 +1209,23 @@ MonoBehaviour:
     type: 3}
   enemyWarrior: {fileID: -4186123555350143438, guid: e8be40f7c7c7ee243a9747d01d3dc07e,
     type: 3}
+  plrBaseHealth: 100
+  enmBaseHealth: 100
+  Menu: {fileID: 2099476870}
+  Hud: {fileID: 1579498796}
+  H2p: {fileID: 1929678559}
+  resStone: 0
   foragerList: []
   warriorList: []
   EnemyForagerList: []
   EnemyWarriorList: []
-  maxUnits: 10
   unitCount: 0
   enemyUnitCount: 0
-  timer: 5
-  timer_Cash: 10
-  Menu: {fileID: 2099476870}
-  Hud: {fileID: 1579498796}
-  H2p: {fileID: 1929678559}
-  CharacterStart: {fileID: 561634765}
-  EnemyStart: {fileID: 366655429}
-  resStone: 0
-  plrBaseHealth: 100
-  enmBaseHealth: 100
-  mMap: {fileID: 0}
-  characterSelection: 0
-  winner: 0
-  texMaterial: {fileID: 2100000, guid: c4e472abef2548a4abdf9bbf325d0a3e, type: 2}
+  cash: 0
+  enemyCash: 0
   isGameStarted: 0
+  winner: 0
+  mMap: {fileID: 0}
   baseTile: {fileID: 0}
   enemyBaseTile: {fileID: 0}
 --- !u!4 &896303072

@@ -9,28 +9,39 @@ using Random = UnityEngine.Random;
 
 public class Environment : MonoBehaviour
 {
+    // Tile lists pre-defined through unity editor
     [SerializeField] public List<EnvironmentTile> AccessibleTiles;
     [SerializeField] public List<EnvironmentTile> InaccessibleTiles;
     [SerializeField] public Vector2Int Size;
 
+    // Map holder and lists for path finding
     public EnvironmentTile[][] mMap;
     public List<EnvironmentTile> mAll;
     private List<EnvironmentTile> mToBeTested;
     private List<EnvironmentTile> mLastSolution;
+
+    // Specific list to contain forager-checked tiles
     public List<EnvironmentTile> foragerTilesTBC;
 
+    // Holders for base and enemy base tiles
     public EnvironmentTile baseTile;
     public EnvironmentTile enemyBaseTile;
 
+    // Get node and tile sizes
     private readonly Vector3 NodeSize = Vector3.one * 9.0f; 
     private const float TileSize = 10.0f;
     private const float TileHeight = 2.5f;
 
+    // Corner values for midpoint disp algorithm
     private float[] cornerValues = new float[4]{0,0,0,0};
 
+    // Start position for generation
     public EnvironmentTile Start { get; private set; }
+
+    // Actual transform pos for tile (in generation)
     public Vector3 finalPosition;
 
+    // Checker for if a pass of midpoint displacement fills an approximate amount of inaccessible tiles
     private bool initial = false;
 
     private void Awake()
@@ -82,31 +93,31 @@ public class Environment : MonoBehaviour
         }
     }
 
+    // Func for generation, checks what percentage of the map is inacesible
     private float CheckPercentage()
     {
-        float accessible = 0, nonAccessible = 0, gridSize = 0;
+        float nonAccessible = 0, gridSize = 0;
 
+        // Count all inaccessible tiles
         for (int x = 0; x < Size.x; ++x)
         {  
             for (int y = 0; y < Size.y; ++y)
             {
-                if (mMap[x][y].IsAccessible == true)
-                {
-                    accessible++;
-                }
-                else
+                if (mMap[x][y].IsAccessible == false)
                 {
                     nonAccessible++;
                 }
             }
         }
 
+        // Get overall no of tiles
         gridSize = Size.x * Size.y;
 
+        // Return percentage of tiles inaccessible on the map
         return (nonAccessible*100 / gridSize);
-
     }
 
+    // Main map generation func
     private void Generate()
     {
         // Setup the map of the environment tiles according to the specified width and height
@@ -119,39 +130,50 @@ public class Environment : MonoBehaviour
         Vector3 position = new Vector3( -(halfWidth * TileSize), 0.0f, -(halfHeight * TileSize) );
         bool start = true;
 
+        // Generate each tile and create a flat, accessible plane
         for ( int x = 0; x < Size.x; ++x)
         {
             mMap[x] = new EnvironmentTile[Size.y];
             for (int y = 0; y < Size.y; ++y)
             {
-                bool isAccessible = true;
-                List<EnvironmentTile> tiles = isAccessible ? AccessibleTiles : InaccessibleTiles;
+                // Create the tile and define it as a flat basic accessible tile
+                List<EnvironmentTile> tiles = AccessibleTiles;
                 EnvironmentTile prefab = tiles[0];
                 EnvironmentTile tile = Instantiate(prefab, position, Quaternion.identity, transform);
                 tile.Position = new Vector3(position.x + (TileSize / 2), TileHeight, position.z + (TileSize / 2));
-                tile.IsAccessible = isAccessible;
+                tile.IsAccessible = true;
                 tile.gameObject.name = string.Format("Tile({0},{1})", x, y);
                 tile.Type = string.Format("ground");
                 tile.InUse = false;
+
+                // Place tile on grid and add to list 
                 mMap[x][y] = tile;
                 mAll.Add(tile);
-                if (start) { Start = tile; }
+
+                // Define first placed tile as the starting point then don't do it again
+                if (start) { Start = tile; start = false; }
+
                 position.z += TileSize;
-                start = false;
             }
             position.x += TileSize;
             position.z = -(halfHeight * TileSize);
         }
 
+        // Create base tile for player at pos (1,1)
         MakeTileInaccessible(1, 1, 5);
         baseTile = mMap[1][1];
+
+        // Create base tile for player at pos (MAX X - 1, MAX Y - 1)
         MakeTileInaccessible(Size.x - 2, Size.y - 2, 6);
         enemyBaseTile = mMap[Size.x - 2][Size.y - 2];
 
+        // Repeat midpoint disp algorithm until an appropriate amount of tiles are inaccessible
         while (CheckPercentage() < 20  || initial == false)
         {
+            // Get grid of floats from midpoint disp algorithm
             float[,] result = Midpoint_Displacement(5.0f, 20.0f, Size.x, 0);
 
+            // Change all tiles above a certain value to be inaccessible
             for (int i = 0; i < Size.x; i++)
             {
                 for (int j = 0; j < Size.y; j++)
@@ -166,36 +188,48 @@ public class Environment : MonoBehaviour
                 }
             }
 
+            // For now, we have generated the tiles
             initial = true;
 
+            // Check if the percentage of inaccessible tiles is more than 50% 
             if (CheckPercentage() > 50)
             {
+                // Too many inaccessible tiles, so redo the algorithm
                 initial = false;
             }
         }
 
-        int randomNumber = Random.Range(0, 100); // Get random number
+        // Get random number   
+        int randomNumber = Random.Range(0, 100); 
 
+        // Generate river horizontally or vertically based on random no
         if (randomNumber < 50) {
-            RiverMaker(true);
+            RiverMaker(true);   // Horizontal
         }
         else {
-            RiverMaker(false);
+            RiverMaker(false); // Vertical
         }
 
+        // ALWAYS generate a horizontal river
         RiverMaker(true);
 
+        // Set the last calculated tile position
         finalPosition = position;
         
+        // Change all tiles around the player base to be accessible
         Vector2Int BasePosition = new Vector2Int(1, 1);
         MakeSurroundingTilesAccessible(BasePosition);
+
+        // Change all tiles around the enemy base to be accessible
         BasePosition = new Vector2Int(Size.x - 2, Size.y - 2);
         MakeSurroundingTilesAccessible(BasePosition);
 
+        // Add all inaccessible tiles to the tiles that the foragers need to check
         for (int i = 0; i < Size.x; i++)
         {
             for (int j = 0; j < Size.y; j++)
             {
+                // Make sure this tile is a rock and is inaccessible then add 
                 if (mMap[i][j].IsAccessible == false && mMap[i][j].Type == "rock")
                 {
                     foragerTilesTBC.Add(mMap[i][j]);
@@ -204,8 +238,10 @@ public class Environment : MonoBehaviour
         }
     }
 
+    // Func to ensure all tiles around a point are accessible
     public void MakeSurroundingTilesAccessible(Vector2Int Pos)
     {
+        // Revert each surrounding tile to a basic accessible plane
         RevertTile(Pos.x - 1, Pos.y);
         RevertTile(Pos.x + 1, Pos.y);
         RevertTile(Pos.x, Pos.y + 1);
@@ -216,19 +252,26 @@ public class Environment : MonoBehaviour
         RevertTile(Pos.x + 1, Pos.y + 1);
     }
 
+    // River creation func (horizontal or vertical)
     public void RiverMaker(bool direction)
     {
+        // Starting tile and end tile def
         float riverStartTile = 0.0f;
         float riverEndTile = float.MaxValue;
 
-        if (direction == true) // pos
+        // Direction of the river
+        if (direction == true) // Horizontal
         {
+            // Randomise starting point (but don't include some edge tiles to stop impossible map creation)
             riverStartTile = Random.Range(2, Size.x - 1);
 
+            // Get a random end point on the map (min of a length of 3 tiles)
             while (riverEndTile > mMap.Length)
             {
                 riverEndTile = Random.Range(riverStartTile + 3, Size.x - 1);
             }
+            
+            // Make this tile line an inaccessible river
             for (int i = (int)Random.Range(0, riverStartTile - 1); i < riverEndTile; i++)
             {
                 if (mMap[i][(int)riverStartTile].IsAccessible == true)
@@ -237,14 +280,18 @@ public class Environment : MonoBehaviour
                 }
             }
         }
-        else
+        else // Vertical
         {
+            // Randomise starting point (but don't include some edge tiles to stop impossible map creation)
             riverStartTile = Random.Range(2, Size.y - 1);
+
+            // Get a random end point on the map (min of a length of 3 tiles)
             while (riverEndTile > mMap.Length)
             {
                 riverEndTile = Random.Range(riverStartTile + 3, Size.y - 1);
             }
 
+            // Make this tile line an inaccessible river
             for (int i = (int)Random.Range(0, riverStartTile - 1); i < riverEndTile; i++)
             {
                 if (mMap[(int) riverStartTile][i].IsAccessible == true)
@@ -255,6 +302,7 @@ public class Environment : MonoBehaviour
         }
     }
 
+    // Make a specific tile inaccessible (at point x,y and of specific type)
     // Types (more for possible expansion):
     // 0 = rocks
     // 1 = stone
@@ -265,32 +313,40 @@ public class Environment : MonoBehaviour
     // 6 = enemy base
     public void MakeTileInaccessible(int x, int y, int type) 
     {
+        // Get transform pos of where to make inaccessible
         finalPosition = mMap[x][y].transform.position;
 
+        // Create new tile initially to the first inaccessible tile type in list 
         EnvironmentTile prefabNa = InaccessibleTiles[0];
 
+        // Define what type of inaccessible tile this will be
         switch (type)
         {
-            case 0: prefabNa = InaccessibleTiles[Random.Range(4, 10)]; break;
-            case 1: prefabNa = InaccessibleTiles[Random.Range(10, 16)]; break;
-            case 2: prefabNa = InaccessibleTiles[Random.Range(2, 4)]; break;
-            case 3: prefabNa = InaccessibleTiles[Random.Range(0, 2)]; break;
-            case 4: prefabNa = InaccessibleTiles[16]; break;
-            case 5: prefabNa = InaccessibleTiles[17]; break;
-            case 6: prefabNa = InaccessibleTiles[18]; break;
+            case 0: prefabNa = InaccessibleTiles[Random.Range(4, 10)]; break;   // Rocks
+            case 1: prefabNa = InaccessibleTiles[Random.Range(10, 16)]; break;  // Stone
+            case 2: prefabNa = InaccessibleTiles[Random.Range(2, 4)]; break;    // Trees    
+            case 3: prefabNa = InaccessibleTiles[Random.Range(0, 2)]; break;    // Logs
+            case 4: prefabNa = InaccessibleTiles[16]; break;                    // Water
+            case 5: prefabNa = InaccessibleTiles[17]; break;                    // Player Base
+            case 6: prefabNa = InaccessibleTiles[18]; break;                    // Enemy Base
         }
 
+        // Get reference to tile on map
         var t = mMap[x][y];
 
+        // Change mesh of tile to be the type of inaccessible tile
         t.GetComponent<MeshFilter>().sharedMesh = prefabNa.GetComponent<MeshFilter>().sharedMesh;
         t.GetComponent<MeshRenderer>().materials = prefabNa.GetComponent<MeshRenderer>().sharedMaterials;
 
+        // Using rocks and player/enemy base objects, requires instantiation of extra object (e.g the actual rock)
         if (type == 0 || type == 5 || type == 6) {
             Instantiate(prefabNa.GetComponentInChildren<MeshFilter>(), finalPosition, mMap[x][y].transform.rotation, t.transform);
         }
 
+        // Make this tile not accessible
         t.IsAccessible = false;
 
+        // Define tile type string and health (if appropriate)
         switch (type)
         {
             case 0: t.Type = "rock";
@@ -307,40 +363,52 @@ public class Environment : MonoBehaviour
             default: t.Type = "error"; break;
         }
 
+        // Replace tile in the map tile list
         if (mAll.FindIndex(ind => ind.Equals(mMap[x][y])) != -1)
         {
             mAll[mAll.FindIndex(ind => ind.Equals(mMap[x][y]))] = t;
         }
 
-
+        // Change this tile to be the new inaccessible tile
         mMap[x][y] = t;
     }
 
+    // Func for reverting a tile to be accessible
     public void RevertTile(int x, int y)
     {
+        // Get transform position
         finalPosition = mMap[x][y].transform.position;
 
+        // Create new prefab for new tile (set to flat grass plane)
         EnvironmentTile prefabA = AccessibleTiles[0];
 
+        // Make a tile in reference to the map pos tile
         var t = mMap[x][y];
 
+        // Change mesh to be flat grass
         t.GetComponent<MeshFilter>().sharedMesh = prefabA.GetComponent<MeshFilter>().sharedMesh;
         t.GetComponent<MeshRenderer>().materials = prefabA.GetComponent<MeshRenderer>().sharedMaterials;
+
+        // Make tile accessible and define as type 'ground'
         t.IsAccessible = true;
         t.Type = string.Format("ground");
 
+        // Delete extraneous objects (e.g. a rock on-top of the tile)
         foreach (Transform child in t.transform)
         {
             GameObject.Destroy(child.gameObject);
         }
 
+        // Replace tile in map tile list
         if (mAll.FindIndex(ind => ind.Equals(mMap[x][y])) != -1)
         {
             mAll[mAll.FindIndex(ind => ind.Equals(mMap[x][y]))] = t;
         }
 
+        // Remove this tile from the forager check list
         foragerTilesTBC.Remove(t);
 
+        // Change this tile to be the new accessible tile
         mMap[x][y] = t;
     }
 
@@ -416,9 +484,7 @@ public class Environment : MonoBehaviour
             }
 
             mAll.Clear();
-            //mLastSolution.Clear();
-            //mToBeTested.Clear();
-            foragerTilesTBC.Clear();
+            foragerTilesTBC.Clear(); // Clear list of checked forager targets
         }
     }
 
@@ -533,6 +599,14 @@ public class Environment : MonoBehaviour
         return result;
     }
 
+    // ----------------------NOTE----------------------------- //
+    // This is the midpoint displacement algorithm I created
+    // for my  3rd year Procedural Methods module at
+    // Abertay university. Adapted to work in unity for
+    // realistic rock clusters
+    // ------------------------------------------------------ //
+
+    // Main midpoint displacement algorithm for generating rock clusters
     public float[,] Midpoint_Displacement(float minRange, float maxRange, int mapSize, int start)
     {
         float[,] map = new float[mapSize,mapSize];
@@ -670,6 +744,7 @@ public class Environment : MonoBehaviour
         return map;
     }
 
+    // Diamond step
     public void diamond_step(float[,] map, int startX, int startY, int chX, int chY, float minRange, float maxRange)
     {
         // Midpoint container
@@ -744,6 +819,7 @@ public class Environment : MonoBehaviour
         return ((a + b) / 2) + random;
     }
 
+    // Midpoint helper calculation
     public Vector2 FindMidpoint(float x1, float y1, float x2, float y2)
     {
         // Declare midpoint container
