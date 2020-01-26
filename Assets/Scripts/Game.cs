@@ -21,7 +21,7 @@ public class Game : MonoBehaviour
     [SerializeField] private Camera OverviewCamera;
     private Camera currentCam;
 
-    // Holders for corresponding enemy and forager typesaaaaa
+    // Holders for corresponding enemy and forager types
     [SerializeField] private Forager forager;
     [SerializeField] private Warrior warrior;
     [SerializeField] private Forager enemyForager;

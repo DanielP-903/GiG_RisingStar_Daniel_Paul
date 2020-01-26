@@ -5,13 +5,16 @@ using UnityEngine.Assertions.Must;
 
 public class Warrior : Character
 {
+    // Game and environment reference
     private GameObject game;
     private Environment mMap;
     private EnvironmentTile baseTile;
 
+    // Attack targets for both a warrior and forager
     private Warrior AttackTarget_W = null;
     private Forager AttackTarget_F = null;
 
+    // Warrior states, attacker (if any) and tile ref
     private bool beingAttacked = false;
     private Warrior attacker = null;
     private EnvironmentTile tile = null;
