@@ -6,7 +6,7 @@ public class Forager : Character
 {
     public int capacity = 0;
     [SerializeField] public int maxCapacity = 1;
-    private GameObject theGame;
+    private GameObject game;
     private Environment mMap;
     private EnvironmentTile baseTile;
     private int attempts = 0;
@@ -20,9 +20,9 @@ public class Forager : Character
     void Start()
     {
         Health = 100;
-        theGame = GameObject.FindGameObjectWithTag("GameController");
-        mMap = theGame.GetComponentInChildren<Environment>();
-        baseTile = theGame.GetComponentInChildren<Environment>().baseTile;
+        game = GameObject.FindGameObjectWithTag("GameController");
+        mMap = game.GetComponentInChildren<Environment>();
+        baseTile = game.GetComponentInChildren<Environment>().baseTile;
         CurrentTarget = null;
         headedBackToBase = false;
     }
@@ -32,14 +32,14 @@ public class Forager : Character
     {
         if (this.OwnedBy == Ownership.Enemy)
         {
-            baseTile = theGame.GetComponentInChildren<Environment>().enemyBaseTile;
+            baseTile = game.GetComponentInChildren<Environment>().enemyBaseTile;
         }
         else
         {
-            baseTile = theGame.GetComponentInChildren<Environment>().baseTile;
+            baseTile = game.GetComponentInChildren<Environment>().baseTile;
         }
 
-        if (theGame.GetComponent<Game>().isGameStarted == true)
+        if (game.GetComponent<Game>().isGameStarted == true)
         {
             DoForager();
         }
@@ -82,8 +82,8 @@ public class Forager : Character
         Vector3 oldT = transform.position;
         route = null;
 
-        if (OwnedBy == Ownership.Player) { CheckIfAttacked(theGame.GetComponent<Game>().EnemyWarriorList); }
-        else if (OwnedBy == Ownership.Enemy) { CheckIfAttacked(theGame.GetComponent<Game>().warriorList); }
+        if (OwnedBy == Ownership.Player) { CheckIfAttacked(game.GetComponent<Game>().EnemyWarriorList); }
+        else if (OwnedBy == Ownership.Enemy) { CheckIfAttacked(game.GetComponent<Game>().warriorList); }
 
         if (CurrentTarget == null)
         {
@@ -91,7 +91,7 @@ public class Forager : Character
 
             if (capacity >= maxCapacity && headedBackToBase == false && beingAttacked == false)
             {
-                EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(baseTile, this.CurrentPosition);
+                EnvironmentTile tile2 = game.GetComponent<Game>().CheckAround(baseTile, this.CurrentPosition);
                 if (tile2 != null)
                 {
                     route = mMap.Solve(this.CurrentPosition, tile2, "forager");
@@ -108,7 +108,7 @@ public class Forager : Character
                 bool check = false;
                 while (check == false)
                 {
-                    EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
+                    EnvironmentTile tile2 = game.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
                     if (tile2 != null)
                     {
                         route = mMap.Solve(this.CurrentPosition, tile2, "forager");
@@ -130,7 +130,7 @@ public class Forager : Character
                 }
                 else
                 {
-                    Debug.LogWarning("Eek");
+                    Debug.LogWarning("Something bad has happened...");
                 }
             }
         }
@@ -153,17 +153,15 @@ public class Forager : Character
         {
             if (CheckAround(CurrentTarget, mMap))
             {
-                Debug.Log("Foraging...");
                 float otherHealth = CurrentTarget.Health;
 
-                Vector2Int pos = FindIndex(CurrentTarget, mMap);
+                Vector2Int pos = game.GetComponent<Game>().FindIndex(CurrentTarget);
 
                 Vector3 tilePosition = mMap.mMap[pos.x][pos.y].transform.position;
 
                 if (Time.deltaTime >= 0)
                 {
                     CurrentTarget.Health -= 0.5f; 
-                    //Debug.Log(CurrentTarget.Health);
                     if (CurrentTarget.Health <= 0)
                     {
                         mMap.RevertTile(pos.x, pos.y);
@@ -183,11 +181,11 @@ public class Forager : Character
                 CurrentTarget = null;
                 if (this.OwnedBy == Ownership.Player)
                 {
-                    theGame.GetComponent<Game>().cash += capacity * 50;
+                    game.GetComponent<Game>().cash += capacity * 50;
                 }
                 else
                 {
-                    theGame.GetComponent<Game>().enemyCash += capacity * 50;
+                    game.GetComponent<Game>().enemyCash += capacity * 50;
                 }
 
                 capacity = 0;

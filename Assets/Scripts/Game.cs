@@ -32,10 +32,6 @@ public class Game : MonoBehaviour
     public List<Warrior> warriorList = new List<Warrior>();
     public List<Forager> EnemyForagerList = new List<Forager>();
     public List<Warrior> EnemyWarriorList = new List<Warrior>();
-    //[SerializeField] private Forager[] foragers = new Forager[2];
-    //[SerializeField] private Warrior[] warriors = new Warrior[1];
-    //private Forager[] mForagers = new Forager[2];
-    //private Warrior[] mWarriors = new Warrior[1];
 
     [SerializeField] public int maxUnits = 10;
     public int unitCount = 0;
@@ -45,6 +41,7 @@ public class Game : MonoBehaviour
 
     [SerializeField] private Canvas Menu;
     [SerializeField] private Canvas Hud;
+    [SerializeField] private Canvas H2p;
     [SerializeField] private Transform CharacterStart;
     [SerializeField] private Transform EnemyStart;
     [SerializeField] public int resStone;
@@ -59,7 +56,8 @@ public class Game : MonoBehaviour
     private Camera currentCam;
 
     public int characterSelection = -1;
-    public Character.CharacterType selectionType = Character.CharacterType.Forager;
+    //public Character.CharacterType selectionType = Character.CharacterType.Forager;
+    public Character.Ownership winner = Character.Ownership.Player;
 
     public Material texMaterial;
     public bool isGameStarted;
@@ -67,8 +65,12 @@ public class Game : MonoBehaviour
     public EnvironmentTile baseTile;
     public EnvironmentTile enemyBaseTile;
 
-    private readonly int NumberOfRaycastHits = 10;
 
+
+
+    private readonly int NumberOfRaycastHits = 10;
+    private float timerEnd = 10.0f;
+    private bool finishGame = false;
     void Start()
     {
         mRaycastHits = new RaycastHit[NumberOfRaycastHits];
@@ -201,10 +203,8 @@ public class Game : MonoBehaviour
         if (plrBaseHealth <= 0.0f)
         {
             Debug.Log("You lose! GAME OVER");
-            isGameStarted = false;
-            Application.Quit();
-            Exit();
-            ShowMenu(true);
+            winner = Character.Ownership.Enemy;
+            finishGame = true;
         }
     }
 
@@ -215,43 +215,8 @@ public class Game : MonoBehaviour
         if (enmBaseHealth <= 0.0f)
         {
             Debug.Log("You win! GAME OVER");
-            isGameStarted = false;
-            Application.Quit();
-            ShowMenu(true);
-        }
-    }
-
-    private void CheckSelectedTile()
-    {
-        for (int i = 0; i < mMap.Size.x; i++)
-        {
-            for (int j = 0; j < mMap.Size.y; j++)
-            {
-                if (mMap.mMap[i][j].IsAccessible == true)
-                {
-                    mMap.mMap[i][j].GetComponent<MeshRenderer>().materials =
-                        mMap.AccessibleTiles[0].GetComponent<MeshRenderer>().sharedMaterials;
-                }
-            }
-        }
-
-        Ray screenLook = currentCam.ScreenPointToRay(Input.mousePosition);
-        int hits2 = Physics.RaycastNonAlloc(screenLook, mRaycastHits);
-        if (hits2 > 0)
-        {
-            EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
-
-            //Debug.Log(string.Format(tile.Type));
-
-            Vector2Int index = FindIndex(tile);
-            if (index.x != -1 && index.y != -1)
-            {
-                if (tile.Type == "ground")
-                {
-                    tile.GetComponent<MeshRenderer>().materials =
-                        mMap.AccessibleTiles[1].GetComponent<MeshRenderer>().sharedMaterials;
-                }
-            }
+            winner = Character.Ownership.Player;
+            finishGame = true;
         }
     }
 
@@ -280,154 +245,284 @@ public class Game : MonoBehaviour
         return temp;
     }
 
-    private void UpdateForagers()
-    {
-        //Debug.Log(foragerList[characterSelection].CurrentTarget);
-
-        // Check to see if the player has clicked a tile and if they have, try to find a path to that 
-        // tile. If we find a path then the character will move along it to the clicked tile. 
-        if (Input.GetMouseButtonDown(0))
-        {
-            Ray screenClick = currentCam.ScreenPointToRay(Input.mousePosition);
-            int hits = Physics.RaycastNonAlloc(screenClick, mRaycastHits);
-            if (hits > 0)
-            {
-                EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
-
-                if (tile != null)
-                {
-                    List<EnvironmentTile> route;
-
-                    if (tile.Type == "ground")
-                    {
-                        route = mMap.Solve(foragerList[characterSelection].CurrentPosition, tile, "player");
-                        foragerList[characterSelection].GoTo(route);
-                        foragerList[characterSelection].CurrentTarget = null;
-                    }
-                    else if (tile.Type == "rock")
-                    {
-                        EnvironmentTile tile2 = CheckAround(tile, foragerList[characterSelection].CurrentPosition);
-                        route = mMap.Solve(foragerList[characterSelection].CurrentPosition, tile2, "player");
-                        foragerList[characterSelection].GoTo(route);
-                        foragerList[characterSelection].CurrentTarget = tile;
-                    }
-                }
-            }
-        }
-
-        if (foragerList[characterSelection].CurrentTarget != null)
-        {
-            Vector2Int pos = FindIndex(foragerList[characterSelection].CurrentTarget);
-
-            if (mMap.mMap[pos.x][pos.y + 1] != null)
-            {
-                if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1])
-                {
-                    foragerList[characterSelection].Forage();
-                }
-            } 
-            
-            if (mMap.mMap[pos.x][pos.y - 1] != null)
-            {
-                if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1])
-                {
-                    foragerList[characterSelection].Forage();
-                }
-            }
-            
-            if (mMap.mMap[pos.x + 1][pos.y] != null)
-            {
-                if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y])
-                {
-                    foragerList[characterSelection].Forage();
-                }
-            }
-            
-            if (mMap.mMap[pos.x - 1][pos.y] != null)
-            {
-                if (foragerList[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
-                {
-                    foragerList[characterSelection].Forage();
-                }
-            }
-        }
-    }
-    
-    private void UpdateWarriors()
-    {
-        //Debug.Log(warriorList[characterSelection].CurrentTarget);
-
-        // Check to see if the player has clicked a tile and if they have, try to find a path to that 
-        // tile. If we find a path then the character will move along it to the clicked tile. 
-        if (Input.GetMouseButtonDown(0))
-        {
-            Ray screenClick = currentCam.ScreenPointToRay(Input.mousePosition);
-            int hits = Physics.RaycastNonAlloc(screenClick, mRaycastHits);
-            if (hits > 0)
-            {
-                EnvironmentTile tile = mRaycastHits[0].transform.GetComponent<EnvironmentTile>();
-
-                if (tile != null)
-                {
-                    List<EnvironmentTile> route;
-
-                    if (tile.Type == "ground")
-                    {
-                        route = mMap.Solve(warriorList[characterSelection].CurrentPosition, tile, "player");
-                        warriorList[characterSelection].GoTo(route);
-                        warriorList[characterSelection].CurrentTarget = null;
-                    }
-                    else if (tile.Type == "enemy base")
-                    {
-                        EnvironmentTile tile2 = CheckAround(tile, warriorList[characterSelection].CurrentPosition);
-                        route = mMap.Solve(warriorList[characterSelection].CurrentPosition, tile2, "player");
-                        warriorList[characterSelection].GoTo(route);
-                        warriorList[characterSelection].CurrentTarget = tile;
-                    }
-                }
-            }
-        }
-
-        if (warriorList[characterSelection].CurrentTarget != null)
-        {
-            Vector2Int pos = FindIndex(warriorList[characterSelection].CurrentTarget);
-            if (mMap.mMap[pos.x][pos.y + 1] != null)
-            {
-                if (warriorList[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y + 1])
-                {
-                    AttackEnemyBase();
-                }
-            }
-            if (mMap.mMap[pos.x][pos.y - 1] != null)
-            {
-                if (warriorList[characterSelection].CurrentPosition == mMap.mMap[pos.x][pos.y - 1])
-                {
-                    AttackEnemyBase();
-                }
-            }
-            if (mMap.mMap[pos.x + 1][pos.y] != null)
-            {
-                if (warriorList[characterSelection].CurrentPosition == mMap.mMap[pos.x + 1][pos.y])
-                {
-                    AttackEnemyBase();
-                }
-            }
-            if (mMap.mMap[pos.x - 1][pos.y] != null)
-            {
-                if (warriorList[characterSelection].CurrentPosition == mMap.mMap[pos.x - 1][pos.y])
-                {
-                    AttackEnemyBase();
-                }
-            }
-        }
-    }
-
     private void UpdateGame()
     {
         Hud.transform.GetChild(4).GetComponent<Text>().text = "Cash \n" + cash;
         Hud.transform.GetChild(5).GetComponent<Text>().text = "Units \n" + unitCount + " / 10";
 
-        /*bool check = false;
+
+        if (currentCam == OverviewCamera)
+        {
+            if (currentCam.transform.position.x < -250)
+            {
+                currentCam.transform.position = new Vector3(-250f, currentCam.transform.position.y, currentCam.transform.position.z);
+            }
+            if (currentCam.transform.position.x > -50)
+            {
+                currentCam.transform.position = new Vector3(-50f, currentCam.transform.position.y, currentCam.transform.position.z);
+            }
+
+            if (currentCam.transform.position.z > -50)
+            {
+                currentCam.transform.position = new Vector3(currentCam.transform.position.x, currentCam.transform.position.y, -50f);
+            }
+
+            if (currentCam.transform.position.z < -250)
+            {
+                currentCam.transform.position = new Vector3(currentCam.transform.position.x, currentCam.transform.position.y, -250f);
+            }
+            Vector3 addVec = currentCam.transform.position;
+            float zoom = 1.0f;
+
+            // Camera movement controls (WASD)
+            if (Input.GetKey(KeyCode.A))
+            {
+                if ((currentCam.transform.position + (new Vector3(-1, 0, 1))).x > - 250)
+                {
+                    addVec += (new Vector3(-1, 0, 1));
+                }
+            }
+            else if (Input.GetKey(KeyCode.D))
+            {
+                if ((currentCam.transform.position + (new Vector3(1, 0, -1))).x < -50)
+                {
+                    addVec += (new Vector3(1, 0, -1));
+                }
+            } 
+            if (Input.GetKey(KeyCode.W))
+            {
+                if ((currentCam.transform.position + (new Vector3(1.5f, 0, 1.5f))).z < -50)
+                {
+                    addVec += (new Vector3(1.5f, 0, 1.5f));
+                }
+            }
+            else if (Input.GetKey(KeyCode.S))
+            {
+                if ((currentCam.transform.position + (new Vector3(-1.5f, 0, -1.5f))).z > -250)
+                {
+                    addVec += (new Vector3(-1.5f, 0, -1.5f));
+                }
+            }
+
+            
+
+            // Camera zoom in/out
+            if (Input.GetAxis("Mouse ScrollWheel") > 0)
+            {
+                if (currentCam.orthographicSize - zoom > 20)
+                {
+                    currentCam.orthographicSize -= zoom;
+                    OverviewCamera.orthographicSize -= zoom;
+                }
+            }
+            else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+            {
+                if (currentCam.orthographicSize + zoom < 80)
+                {
+                    currentCam.orthographicSize += zoom;
+                    OverviewCamera.orthographicSize += zoom;
+                }
+            }
+
+            currentCam.transform.position = addVec;
+            OverviewCamera.transform.position = addVec;
+        }
+
+    }
+
+    public void splash()
+    {
+        if (timerEnd > 0)
+        {
+            if (winner == Character.Ownership.Enemy)
+            {
+                plrBaseHealth = 0.0f;
+                Hud.transform.GetChild(6).gameObject.SetActive(true);
+            }
+            else
+            {
+                enmBaseHealth = 0.0f;
+                Hud.transform.GetChild(7).gameObject.SetActive(true);
+            }
+
+            timerEnd -= Time.deltaTime;
+        }
+        else
+        {
+            finishGame = false;
+            timerEnd = 10.0f;
+            isGameStarted = false;
+            Hud.transform.GetChild(6).gameObject.SetActive(false);
+            Hud.transform.GetChild(7).gameObject.SetActive(false);
+            ShowMenu(true);
+        }
+    }
+
+    private void Update()
+    {
+        if (isGameStarted)
+        {
+            if (finishGame == false)
+            {
+                UpdateGame();
+
+                timer_Cash -= Time.deltaTime;
+                if (timer_Cash < 0)
+                {
+                    timer_Cash = 10.0f;
+                    cash += 10;
+                }
+
+                if (enemyUnitCount < 10)
+                {
+                    timer -= Time.deltaTime;
+                }
+
+                if (timer <= 0)
+                {
+                    timer = 5;
+                    float random = UnityEngine.Random.Range(0, 1000);
+                    if (random < 500)
+                    {
+                        EnemyGenerator(Character.CharacterType.Warrior);
+                    }
+                    else if (EnemyForagerList.Count < 4 && random >= 750)
+                    {
+                        EnemyGenerator(Character.CharacterType.Forager);
+                    }
+                    else if (EnemyForagerList.Count == 0)
+                    {
+                        EnemyGenerator(Character.CharacterType.Forager);
+                    }
+                }
+            }
+            else
+            {
+                splash();
+            }
+        }
+    }
+
+    public void ShowH2P(bool show)
+    {
+        if (H2p != null && Menu!= null)
+        {
+            if (show)
+            {
+                Menu.enabled = false;
+                Hud.enabled = false;
+                H2p.enabled = true;
+
+                MainCamera.enabled = true;
+                OverviewCamera.enabled = false;
+
+                currentCam = MainCamera;
+            }
+            else
+            {
+                Menu.enabled = true;
+                Hud.enabled = false;
+                H2p.enabled = false;
+                ShowMenu(true);
+            }
+        }
+    }
+
+    public void ShowMenu(bool show)
+    {
+        if (Menu != null && Hud != null)
+        {
+            Menu.enabled = show;
+            Hud.enabled = !show;
+            H2p.enabled = false;
+            if (show)
+            {
+                finishGame = false;
+                timer = 5;
+                timer_Cash = 10;
+                timerEnd = 10;
+                foreach (var f in foragerList)
+                {
+                    Destroy(f.gameObject);
+                    f.transform.position = CharacterStart.position;
+                    f.transform.rotation = CharacterStart.rotation;
+                }
+
+                foreach (var w in warriorList)
+                {
+                    Destroy(w.gameObject);
+                    w.transform.position = CharacterStart.position;
+                    w.transform.rotation = CharacterStart.rotation;
+                }
+
+                foreach (var f in EnemyForagerList)
+                {
+                    Destroy(f.gameObject);
+                    f.transform.position = CharacterStart.position;
+                    f.transform.rotation = CharacterStart.rotation;
+                }
+
+                foreach (var w in EnemyWarriorList)
+                {
+                    Destroy(w.gameObject);
+                    w.transform.position = CharacterStart.position;
+                    w.transform.rotation = CharacterStart.rotation;
+                }
+
+                foragerList.Clear();
+                warriorList.Clear();
+                EnemyForagerList.Clear();
+                EnemyWarriorList.Clear();
+
+
+                mMap.CleanUpWorld();
+
+                isGameStarted = false;
+
+                MainCamera.enabled = true;
+                OverviewCamera.enabled = false;
+
+                currentCam = MainCamera;
+            }
+            else
+            {
+                cash = startingCash;
+                enemyCash = enemyStartingCash;
+
+                unitCount = 0;
+                enemyUnitCount = 0;
+
+                isGameStarted = true;
+
+                timer = 5.0f;
+
+                MainCamera.enabled = false;
+                OverviewCamera.enabled = true;
+
+                currentCam = OverviewCamera;
+                enmBaseHealth = 100.0f;
+                plrBaseHealth = 100.0f;
+            }
+        }
+    }
+
+    public void Generate()
+    {
+        mMap.GenerateWorld();
+
+    }
+
+    public void Exit()
+    {
+#if !UNITY_EDITOR
+            Application.Quit();
+#endif
+    }
+}
+
+// UNUSED AND BROKEN FEATURES
+
+/*bool check = false;
 
         if (Input.GetMouseButtonDown(0) && characterSelection == -1)
         {
@@ -516,222 +611,3 @@ public class Game : MonoBehaviour
 
             characterSelection = -1;
         }*/
-
-        if (currentCam == OverviewCamera)
-        {
-            if (currentCam.transform.position.x < -250)
-            {
-                currentCam.transform.position = new Vector3(-250f, currentCam.transform.position.y, currentCam.transform.position.z);
-            }
-            if (currentCam.transform.position.x > -50)
-            {
-                currentCam.transform.position = new Vector3(-50f, currentCam.transform.position.y, currentCam.transform.position.z);
-            }
-
-            if (currentCam.transform.position.z > -50)
-            {
-                currentCam.transform.position = new Vector3(currentCam.transform.position.x, currentCam.transform.position.y, -50f);
-            }
-
-            if (currentCam.transform.position.z < -250)
-            {
-                currentCam.transform.position = new Vector3(currentCam.transform.position.x, currentCam.transform.position.y, -250f);
-            }
-            Vector3 addVec = currentCam.transform.position;
-            float zoom = 1.0f;
-
-            // Camera movement controls (WASD)
-            if (Input.GetKey(KeyCode.A))
-            {
-                if ((currentCam.transform.position + (new Vector3(-1, 0, 1))).x > - 250)
-                {
-                    addVec += (new Vector3(-1, 0, 1));
-                }
-            }
-            else if (Input.GetKey(KeyCode.D))
-            {
-                if ((currentCam.transform.position + (new Vector3(1, 0, -1))).x < -50)
-                {
-                    addVec += (new Vector3(1, 0, -1));
-                }
-            } 
-            if (Input.GetKey(KeyCode.W))
-            {
-                if ((currentCam.transform.position + (new Vector3(1.5f, 0, 1.5f))).z < -50)
-                {
-                    addVec += (new Vector3(1.5f, 0, 1.5f));
-                }
-            }
-            else if (Input.GetKey(KeyCode.S))
-            {
-                if ((currentCam.transform.position + (new Vector3(-1.5f, 0, -1.5f))).z > -250)
-                {
-                    addVec += (new Vector3(-1.5f, 0, -1.5f));
-                }
-            }
-
-            
-
-            // Camera zoom in/out
-            if (Input.GetAxis("Mouse ScrollWheel") > 0)
-            {
-                if (currentCam.orthographicSize - zoom > 20)
-                {
-                    currentCam.orthographicSize -= zoom;
-                    OverviewCamera.orthographicSize -= zoom;
-                }
-            }
-            else if (Input.GetAxis("Mouse ScrollWheel") < 0)
-            {
-                if (currentCam.orthographicSize + zoom < 80)
-                {
-                    currentCam.orthographicSize += zoom;
-                    OverviewCamera.orthographicSize += zoom;
-                }
-            }
-
-            currentCam.transform.position = addVec;
-            OverviewCamera.transform.position = addVec;
-        }
-
-    }
-
-    private void Update()
-    {
-        if (isGameStarted)
-        {
-            UpdateGame();
-
-            timer_Cash -= Time.deltaTime;
-            if (timer_Cash < 0)
-            {
-                timer_Cash = 10.0f;
-                cash += 10;
-            }
-
-            if (enemyUnitCount < 10)
-            {
-                timer -= Time.deltaTime;
-            }
-
-            if (timer <= 0)
-            {
-                timer = 5;
-                float random = UnityEngine.Random.Range(0, 1000);
-                if (random < 500)
-                {
-                    EnemyGenerator(Character.CharacterType.Warrior);
-                }
-                else if (EnemyForagerList.Count < 4 && random >= 750)
-                {
-                    EnemyGenerator(Character.CharacterType.Forager);
-                } 
-                else if (EnemyForagerList.Count==0)
-                {
-                    EnemyGenerator(Character.CharacterType.Forager);
-                }
-            }
-
-            //if (characterSelection != -1)
-            //{
-            //    if (selectionType == Character.CharacterType.Forager)
-            //    {
-            //        UpdateForagers();
-            //    }
-            //    else
-            //    {
-            //        UpdateWarriors();
-            //    }
-            //    CheckSelectedTile();
-            //}
-        }
-    }
-
-    public void ShowMenu(bool show)
-    {
-        if (Menu != null && Hud != null)
-        {
-            Menu.enabled = show;
-            Hud.enabled = !show;
-
-            if (show)
-            {
-
-                foreach (var f in foragerList)
-                {
-                    Destroy(f.gameObject);
-                    f.transform.position = CharacterStart.position;
-                    f.transform.rotation = CharacterStart.rotation;
-                }
-
-                foreach (var w in warriorList)
-                {
-                    Destroy(w.gameObject);
-                    w.transform.position = CharacterStart.position;
-                    w.transform.rotation = CharacterStart.rotation;
-                }
-
-                foreach (var f in EnemyForagerList)
-                {
-                    Destroy(f.gameObject);
-                    f.transform.position = CharacterStart.position;
-                    f.transform.rotation = CharacterStart.rotation;
-                }
-
-                foreach (var w in EnemyWarriorList)
-                {
-                    Destroy(w.gameObject);
-                    w.transform.position = CharacterStart.position;
-                    w.transform.rotation = CharacterStart.rotation;
-                }
-
-                foragerList.Clear();
-                warriorList.Clear();
-                EnemyForagerList.Clear();
-                EnemyWarriorList.Clear();
-
-
-                mMap.CleanUpWorld();
-
-                isGameStarted = false;
-
-                MainCamera.enabled = true;
-                OverviewCamera.enabled = false;
-
-                currentCam = MainCamera;
-            }
-            else
-            {
-                cash = startingCash;
-                enemyCash = enemyStartingCash;
-
-                unitCount = 0;
-                enemyUnitCount = 0;
-
-                isGameStarted = true;
-
-                timer = 5.0f;
-
-                MainCamera.enabled = false;
-                OverviewCamera.enabled = true;
-
-                currentCam = OverviewCamera;
-                enmBaseHealth = 100.0f;
-                plrBaseHealth = 100.0f;
-            }
-        }
-    }
-
-    public void Generate()
-    {
-        mMap.GenerateWorld();
-
-    }
-
-    public void Exit()
-    {
-#if !UNITY_EDITOR
-            Application.Quit();
-#endif
-    }
-}

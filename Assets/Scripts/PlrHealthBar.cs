@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnmHealthBar : MonoBehaviour
+public class PlrHealthBar : MonoBehaviour
 {
-    // Enemy health bar logic
+    // Player health bar logic
 
     // Reference to the game controller
     private GameObject theGame;
@@ -22,10 +22,10 @@ public class EnmHealthBar : MonoBehaviour
         // If the game hasn't started, reset the health bar
         if (theGame.GetComponent<Game>().isGameStarted == false)
         {
-            transform.localScale = new Vector3(1.0f,1.0f,1.0f);
+            transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
         }
 
-        // Update health bar using percentage of enemy base health value
-        transform.localScale = new Vector3(theGame.GetComponent<Game>().enmBaseHealth/ 100.0f,1.0f,1.0f);
+        // Update health bar using percentage of player base health value
+        transform.localScale = new Vector3(theGame.GetComponent<Game>().plrBaseHealth / 100.0f, 1.0f, 1.0f);
     }
 }

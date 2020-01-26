@@ -5,7 +5,7 @@ using UnityEngine.Assertions.Must;
 
 public class Warrior : Character
 {
-    private GameObject theGame;
+    private GameObject game;
     private Environment mMap;
     private EnvironmentTile baseTile;
 
@@ -20,9 +20,9 @@ public class Warrior : Character
     void Start()
     {
         Health = 100;
-        theGame = GameObject.FindGameObjectWithTag("GameController");
-        mMap = theGame.GetComponentInChildren<Environment>();
-        baseTile = theGame.GetComponentInChildren<Environment>().baseTile;
+        game = GameObject.FindGameObjectWithTag("GameController");
+        mMap = game.GetComponentInChildren<Environment>();
+        baseTile = game.GetComponentInChildren<Environment>().baseTile;
     }
 
     // Update is called once per frame
@@ -30,21 +30,22 @@ public class Warrior : Character
     {
         if (this.OwnedBy == Ownership.Enemy)
         {
-            baseTile = theGame.GetComponentInChildren<Environment>().baseTile;
+            baseTile = game.GetComponentInChildren<Environment>().baseTile;
         }
         else
         {
-            baseTile = theGame.GetComponentInChildren<Environment>().enemyBaseTile;
+            baseTile = game.GetComponentInChildren<Environment>().enemyBaseTile;
         }
         DoWarrior();
     }
 
     private void FindTarget(List<Warrior> warriors, List<Forager> foragers)
     {
-        float shortestLength = float.MaxValue;// Vector3.Distance(this.transform.position, baseTile.transform.position);
+        float shortestLength = float.MaxValue;
         float temp;
         AttackTarget_F = null;
         AttackTarget_W = null;
+
         // Target warriors by default
         if (warriors.Count == 0)
         {
@@ -76,7 +77,7 @@ public class Warrior : Character
         if (AttackTarget_F == null && AttackTarget_W == null)
         {
             List<EnvironmentTile> route = new List<EnvironmentTile>();
-            EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(baseTile, this.CurrentPosition);
+            EnvironmentTile tile2 = game.GetComponent<Game>().CheckAround(baseTile, this.CurrentPosition);
             if (tile2 != null)
             {
                 route = mMap.Solve(this.CurrentPosition, tile2, "warrior");
@@ -110,24 +111,19 @@ public class Warrior : Character
                 return;
             }
         }
-
-        //if (beingAttacked == false)
-        //{
-        //    CurrentTarget = null;
-        //}
     }
 
     public void DoWarrior()
     {
         // Check if I'm being attacked by something
-        if (OwnedBy == Ownership.Player) { CheckIfAttacked(theGame.GetComponent<Game>().EnemyWarriorList); }
-        else if (OwnedBy == Ownership.Enemy) { CheckIfAttacked(theGame.GetComponent<Game>().warriorList); }
+        if (OwnedBy == Ownership.Player) { CheckIfAttacked(game.GetComponent<Game>().EnemyWarriorList); }
+        else if (OwnedBy == Ownership.Enemy) { CheckIfAttacked(game.GetComponent<Game>().warriorList); }
 
         if (CurrentTarget == null)
         {
             // Find something to attack
-            if (OwnedBy == Ownership.Player) { FindTarget(theGame.GetComponent<Game>().EnemyWarriorList, theGame.GetComponent<Game>().EnemyForagerList); }
-            else if (OwnedBy == Ownership.Enemy) { FindTarget(theGame.GetComponent<Game>().warriorList, theGame.GetComponent<Game>().foragerList); }
+            if (OwnedBy == Ownership.Player) { FindTarget(game.GetComponent<Game>().EnemyWarriorList, game.GetComponent<Game>().EnemyForagerList); }
+            else if (OwnedBy == Ownership.Enemy) { FindTarget(game.GetComponent<Game>().warriorList, game.GetComponent<Game>().foragerList); }
 
             if (tile == null && AttackTarget_F == null && AttackTarget_W == null && beingAttacked == false)
             {
@@ -136,7 +132,7 @@ public class Warrior : Character
             else if (beingAttacked == false)
             {
                 List<EnvironmentTile> route = new List<EnvironmentTile>();
-                EnvironmentTile tile2 = theGame.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
+                EnvironmentTile tile2 = game.GetComponent<Game>().CheckAround(tile, this.CurrentPosition);
                 if (tile2 != null)
                 {
                     route = mMap.Solve(this.CurrentPosition, tile2, "warrior");
@@ -170,21 +166,19 @@ public class Warrior : Character
             if (CheckAround(AttackTarget_F.CurrentPosition, mMap))
             {
                 AttackTarget_F.GetComponent<Forager>().Health -= 10.0f;
-                Debug.Log("ATTACK IN  PROGRESS...");
-
                 if (AttackTarget_F.GetComponent<Forager>().Health <= 0)
                 {
                     beingAttacked = false;
                     Destroy(AttackTarget_F.gameObject);
                     if (OwnedBy == Ownership.Player)
                     {
-                        theGame.GetComponent<Game>().EnemyForagerList.Remove(AttackTarget_F.GetComponent<Forager>());
-                        theGame.GetComponent<Game>().enemyUnitCount--;
+                        game.GetComponent<Game>().EnemyForagerList.Remove(AttackTarget_F.GetComponent<Forager>());
+                        game.GetComponent<Game>().enemyUnitCount--;
                     }
                     else
                     {
-                        theGame.GetComponent<Game>().foragerList.Remove(AttackTarget_F.GetComponent<Forager>());
-                        theGame.GetComponent<Game>().unitCount--;
+                        game.GetComponent<Game>().foragerList.Remove(AttackTarget_F.GetComponent<Forager>());
+                        game.GetComponent<Game>().unitCount--;
                     }
                     AttackTarget_F = null;
                     tile = null;
@@ -196,21 +190,19 @@ public class Warrior : Character
             if (CheckAround(AttackTarget_W.CurrentPosition, mMap))
             {
                 AttackTarget_W.GetComponent<Warrior>().Health -= 10.0f;
-                Debug.Log("ATTACK IN  PROGRESS...");
-
                 if (AttackTarget_W.GetComponent<Warrior>().Health <= 0)
                 {
                     beingAttacked = false;
                     Destroy(AttackTarget_W.gameObject);
                     if (OwnedBy == Ownership.Player)
                     {
-                        theGame.GetComponent<Game>().EnemyWarriorList.Remove(AttackTarget_W.GetComponent<Warrior>());
-                        theGame.GetComponent<Game>().enemyUnitCount--;
+                        game.GetComponent<Game>().EnemyWarriorList.Remove(AttackTarget_W.GetComponent<Warrior>());
+                        game.GetComponent<Game>().enemyUnitCount--;
                     }
                     else
                     {
-                        theGame.GetComponent<Game>().warriorList.Remove(AttackTarget_W.GetComponent<Warrior>());
-                        theGame.GetComponent<Game>().unitCount--;
+                        game.GetComponent<Game>().warriorList.Remove(AttackTarget_W.GetComponent<Warrior>());
+                        game.GetComponent<Game>().unitCount--;
                     }
                     AttackTarget_W = null;
                     tile = null;
@@ -219,14 +211,13 @@ public class Warrior : Character
         }
         else if (CheckAround(baseTile, mMap))
         {
-            //Debug.Log("attacking...");
             if (this.OwnedBy == Ownership.Enemy)
             {
-                theGame.GetComponent<Game>().AttackPlayerBase();
+                game.GetComponent<Game>().AttackPlayerBase();
             }
             else
             {
-                theGame.GetComponent<Game>().AttackEnemyBase();
+                game.GetComponent<Game>().AttackEnemyBase();
             }
         }
     }

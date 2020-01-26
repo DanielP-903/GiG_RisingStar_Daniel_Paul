@@ -255,37 +255,40 @@ public class Environment : MonoBehaviour
         }
     }
 
-    // Type:
+    // Types (more for possible expansion):
     // 0 = rocks
     // 1 = stone
     // 2 = trees
     // 3 = logs
     // 4 = water
     // 5 = player base
+    // 6 = enemy base
     public void MakeTileInaccessible(int x, int y, int type) 
     {
         finalPosition = mMap[x][y].transform.position;
 
-        EnvironmentTile prefabNA = InaccessibleTiles[0];
+        EnvironmentTile prefabNa = InaccessibleTiles[0];
 
         switch (type)
         {
-            case 0: prefabNA = InaccessibleTiles[Random.Range(4, 10)]; break;
-            case 1: prefabNA = InaccessibleTiles[Random.Range(10, 16)]; break;
-            case 2: prefabNA = InaccessibleTiles[Random.Range(2, 4)]; break;
-            case 3: prefabNA = InaccessibleTiles[Random.Range(0, 2)]; break;
-            case 4: prefabNA = InaccessibleTiles[16]; break;
-            case 5: prefabNA = InaccessibleTiles[17]; break;
-            case 6: prefabNA = InaccessibleTiles[18]; break;
+            case 0: prefabNa = InaccessibleTiles[Random.Range(4, 10)]; break;
+            case 1: prefabNa = InaccessibleTiles[Random.Range(10, 16)]; break;
+            case 2: prefabNa = InaccessibleTiles[Random.Range(2, 4)]; break;
+            case 3: prefabNa = InaccessibleTiles[Random.Range(0, 2)]; break;
+            case 4: prefabNa = InaccessibleTiles[16]; break;
+            case 5: prefabNa = InaccessibleTiles[17]; break;
+            case 6: prefabNa = InaccessibleTiles[18]; break;
         }
 
         var t = mMap[x][y];
 
-        t.GetComponent<MeshFilter>().sharedMesh = prefabNA.GetComponent<MeshFilter>().sharedMesh;
-        t.GetComponent<MeshRenderer>().materials = prefabNA.GetComponent<MeshRenderer>().sharedMaterials;
+        t.GetComponent<MeshFilter>().sharedMesh = prefabNa.GetComponent<MeshFilter>().sharedMesh;
+        t.GetComponent<MeshRenderer>().materials = prefabNa.GetComponent<MeshRenderer>().sharedMaterials;
+
         if (type == 0 || type == 5 || type == 6) {
-            Instantiate(prefabNA.GetComponentInChildren<MeshFilter>(), finalPosition, mMap[x][y].transform.rotation, t.transform);
+            Instantiate(prefabNa.GetComponentInChildren<MeshFilter>(), finalPosition, mMap[x][y].transform.rotation, t.transform);
         }
+
         t.IsAccessible = false;
 
         switch (type)
@@ -308,10 +311,6 @@ public class Environment : MonoBehaviour
         {
             mAll[mAll.FindIndex(ind => ind.Equals(mMap[x][y]))] = t;
         }
-        else
-        {
-            Debug.Log("O no");
-        }
 
 
         mMap[x][y] = t;
@@ -330,12 +329,10 @@ public class Environment : MonoBehaviour
         t.IsAccessible = true;
         t.Type = string.Format("ground");
 
-        //Destroy(t.GetComponentInChildren<MeshFilter>().sharedMesh);
-
         foreach (Transform child in t.transform)
         {
             GameObject.Destroy(child.gameObject);
-        }// ???
+        }
 
         if (mAll.FindIndex(ind => ind.Equals(mMap[x][y])) != -1)
         {
@@ -420,7 +417,7 @@ public class Environment : MonoBehaviour
 
             mAll.Clear();
             //mLastSolution.Clear();
-           // mToBeTested.Clear();
+            //mToBeTested.Clear();
             foragerTilesTBC.Clear();
         }
     }

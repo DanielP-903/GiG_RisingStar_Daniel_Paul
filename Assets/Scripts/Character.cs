@@ -10,6 +10,8 @@ public class Character : MonoBehaviour
 
     public EnvironmentTile CurrentTarget { get; set; }
 
+    private GameObject theGame;
+
     public float Health { get; set; }
 
     private const float TileSize = 10.0f;
@@ -52,24 +54,6 @@ public class Character : MonoBehaviour
         }
     }
 
-    public Vector2Int FindIndex(EnvironmentTile tile, Environment mMap)
-    {
-        Vector2Int rVal = new Vector2Int(-1, -1);
-
-        for (int i = 0; i < mMap.Size.x; i++)
-        {
-            for (int j = 0; j < mMap.Size.y; j++)
-            {
-                if (mMap.mMap[i][j] == tile)
-                {
-                    rVal = new Vector2Int(i, j);
-                }
-            }
-        }
-
-        return rVal;
-    }
-
     private IEnumerator DoGoTo(List<EnvironmentTile> route)
     {
         GameObject game = GameObject.FindWithTag("GameController");
@@ -104,8 +88,10 @@ public class Character : MonoBehaviour
 
     public bool CheckAround(EnvironmentTile destinationTile, Environment mMap)
     {
-        Vector2Int index = FindIndex(this.CurrentPosition, mMap);
-        Vector2Int destIndex = FindIndex(destinationTile, mMap);
+        theGame = GameObject.FindGameObjectWithTag("GameController");
+
+        Vector2Int index = theGame.GetComponent<Game>().FindIndex(this.CurrentPosition);
+        Vector2Int destIndex = theGame.GetComponent<Game>().FindIndex(destinationTile);
 
         if (index.x + 1 == destIndex.x && index.y == destIndex.y) { return true; }
         if (index.x - 1 == destIndex.x && index.y == destIndex.y) { return true; }
@@ -117,6 +103,5 @@ public class Character : MonoBehaviour
         if (index.x - 1 == destIndex.x && index.y - 1 == destIndex.y) { return true; }
 
         return false;
-        //return true;
     }
 }
